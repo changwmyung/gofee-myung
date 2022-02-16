@@ -1,0 +1,176 @@
+GOFEE
+##### STEPS: 0 #####
+
+lml: -22.3112413914524
+kernel optimized:
+Theta = ['1.00e+01', '1.00e+00', '1.00e+03', '1.00e-02', '1.00e-05', '6.88e-01']
+
+Timing:
+Training    Relax pop.  Make cands.    Relax cands.    Evaluate    
+1.78e-01    8.65e+00    3.26e-01       5.30e+00        1.32e-01    
+
+Prediction:
+energy = 25.21323eV,  energy_std = 1.57455eV
+E_true:
+0 = 25.4652eV,  1 = 24.7946eV,  
+
+Energy of population:
+0 = 24.7946eV,  1 = 26.3898eV,  2 = 26.8865eV,  3 = 27.6190eV,  
+4 = 28.0492eV,  
+Max force of ML-relaxed population:
+0 = 0.1310eV/A,  1 = 0.4780eV/A,  2 = 0.0007eV/A,  3 = 0.8883eV/A,  
+4 = 1.8577eV/A,  
+
+##### STEPS: 1 #####
+
+lml: -25.34817804704913
+kernel optimized:
+Theta = ['1.06e+01', '1.00e+00', '1.00e+03', '1.00e-02', '1.00e-05', '1.00e-01']
+
+Timing:
+Training    Relax pop.  Make cands.    Relax cands.    Evaluate    
+3.83e-02    5.46e+00    2.73e-01       6.31e+00        1.33e-01    
+
+Prediction:
+energy = 25.18143eV,  energy_std = 1.98140eV
+E_true:
+0 = 25.5191eV,  1 = 24.5960eV,  
+
+Energy of population:
+0 = 24.5960eV,  1 = 24.7946eV,  2 = 26.3898eV,  3 = 26.8865eV,  
+4 = 27.6190eV,  
+Max force of ML-relaxed population:
+0 = 0.0005eV/A,  1 = 0.0009eV/A,  2 = 0.9697eV/A,  3 = 2.0129eV/A,  
+4 = 0.2058eV/A,  
+
+##### STEPS: 2 #####
+
+lml: -29.445514616229694
+kernel optimized:
+Theta = ['1.07e+01', '1.00e+00', '1.00e+03', '1.00e-02', '1.00e-05', '5.49e-01']
+
+Timing:
+Training    Relax pop.  Make cands.    Relax cands.    Evaluate    
+4.97e-02    3.11e+00    4.20e-01       4.72e+00        1.32e-01    
+
+Prediction:
+energy = 23.78589eV,  energy_std = 1.26289eV
+E_true:
+0 = 24.5871eV,  1 = 24.3864eV,  
+
+Energy of population:
+0 = 24.3864eV,  1 = 24.5960eV,  2 = 24.7946eV,  3 = 26.3898eV,  
+4 = 26.8865eV,  
+Max force of ML-relaxed population:
+0 = 2.7370eV/A,  1 = 0.0008eV/A,  2 = 0.0007eV/A,  3 = 0.9853eV/A,  
+4 = 1.8172eV/A,  
+
+##### STEPS: 3 #####
+
+lml: -31.490793560346134
+kernel optimized:
+Theta = ['1.28e+01', '1.00e+00', '1.00e+03', '1.00e-02', '1.00e-05', '1.00e-01']
+
+Timing:
+Training    Relax pop.  Make cands.    Relax cands.    Evaluate    
+3.28e-02    4.19e+00    3.00e-01       9.65e+00        1.38e-01    
+
+Prediction:
+energy = 22.87927eV,  energy_std = 1.52681eV
+E_true:
+0 = 23.6394eV,  1 = 23.3755eV,  
+
+Energy of population:
+0 = 23.3755eV,  1 = 24.3864eV,  2 = 24.5960eV,  3 = 24.7946eV,  
+4 = 26.3898eV,  
+Max force of ML-relaxed population:
+0 = 0.0007eV/A,  1 = 2.1705eV/A,  2 = 0.0010eV/A,  3 = 0.0006eV/A,  
+4 = 1.2667eV/A,  
+
+##### STEPS: 4 #####
+
+lml: -33.661185368333285
+kernel optimized:
+Theta = ['1.11e+01', '1.00e+00', '1.00e+03', '1.00e-02', '1.00e-05', '5.72e-01']
+
+Timing:
+Training    Relax pop.  Make cands.    Relax cands.    Evaluate    
+7.20e-02    4.86e+00    3.96e-01       5.55e+00        1.37e-01    
+
+Prediction:
+energy = 24.31627eV,  energy_std = 2.31459eV
+E_true:
+0 = 25.9581eV,  1 = 25.6214eV,  
+
+Energy of population:
+0 = 23.3755eV,  1 = 24.3864eV,  2 = 24.5960eV,  3 = 24.7946eV,  
+4 = 25.6214eV,  
+Max force of ML-relaxed population:
+0 = 0.0005eV/A,  1 = 0.0006eV/A,  2 = 2.4880eV/A,  3 = 0.0010eV/A,  
+4 = 0.0010eV/A,  
+
+##### STEPS: 5 #####
+
+lml: -35.81409985915575
+kernel optimized:
+Theta = ['1.00e+01', '1.00e+00', '1.00e+03', '1.00e-02', '1.00e-05', '6.83e-01']
+
+Timing:
+Training    Relax pop.  Make cands.    Relax cands.    Evaluate    
+7.22e-02    8.04e+00    3.35e-01       1.22e+01        1.26e-01    
+
+Prediction:
+energy = 22.76592eV,  energy_std = 1.12305eV
+E_true:
+0 = 22.8519eV,  1 = 22.6526eV,  
+
+Energy of population:
+0 = 22.6526eV,  1 = 23.3755eV,  2 = 24.3864eV,  3 = 24.5960eV,  
+4 = 24.7946eV,  
+Max force of ML-relaxed population:
+0 = 0.0006eV/A,  1 = 0.0007eV/A,  2 = 2.3677eV/A,  3 = 0.0006eV/A,  
+4 = 0.0010eV/A,  
+
+##### STEPS: 6 #####
+
+lml: -36.967480565064605
+kernel optimized:
+Theta = ['1.16e+01', '1.00e+00', '1.00e+03', '1.00e-02', '1.00e-05', '1.00e-01']
+
+Timing:
+Training    Relax pop.  Make cands.    Relax cands.    Evaluate    
+1.18e-01    6.93e+00    3.11e-01       8.99e+00        1.39e-01    
+
+Prediction:
+energy = 24.06300eV,  energy_std = 2.32759eV
+E_true:
+0 = 22.6395eV,  1 = 22.6145eV,  
+
+Energy of population:
+0 = 22.6145eV,  1 = 22.6526eV,  2 = 23.3755eV,  3 = 24.3864eV,  
+4 = 24.5960eV,  
+Max force of ML-relaxed population:
+0 = 0.0006eV/A,  1 = 0.0008eV/A,  2 = 0.0005eV/A,  3 = 2.3212eV/A,  
+4 = 0.0008eV/A,  
+
+##### STEPS: 7 #####
+
+lml: -37.737445838287364
+kernel optimized:
+Theta = ['1.11e+01', '1.00e+00', '1.00e+03', '1.00e-02', '1.00e-05', '1.00e-01']
+
+Timing:
+Training    Relax pop.  Make cands.    Relax cands.    Evaluate    
+7.59e-02    3.38e+00    2.82e-01       6.27e+00        1.32e-01    
+
+Prediction:
+energy = 23.56977eV,  energy_std = 2.23943eV
+E_true:
+0 = 22.4430eV,  1 = 22.1542eV,  
+
+Energy of population:
+0 = 22.1542eV,  1 = 22.6145eV,  2 = 22.6526eV,  3 = 23.3755eV,  
+4 = 24.3864eV,  
+Max force of ML-relaxed population:
+0 = 1.0621eV/A,  1 = 0.0010eV/A,  2 = 0.0009eV/A,  3 = 0.0007eV/A,  
+4 = 2.5181eV/A,  
