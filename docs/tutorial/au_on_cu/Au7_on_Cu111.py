@@ -18,7 +18,7 @@ c = FixAtoms(indices=np.arange(len(template)))
 template.set_constraint(c)
 
 # Stoichiometry of atoms to be placed
-stoichiometry = 7*[79]
+stoichiometry = [6,8]
 
 ## Box for startgenerator and rattle-mutation
 k = 0.2  # Shrinkage fraction from each side of the box in v[0] and v[1] directions.
@@ -36,8 +36,9 @@ p0 = np.array((0, 0, z_max_slab+0.3)) + k*(cell[0]+cell[1])
 # Make box
 box = [p0, v]
 
+c = Hookean(a1=25, a2=26, rt=1.5, k=5.)
 # initialize startgenerator (used to generate initial structures)
-sg = StartGenerator(template, stoichiometry, box)
+sg = StartGenerator(template, stoichiometry, box, constraints=c)
 
 ### Set up candidate generation operations ###
 # Set up constraint for rattle-mutation

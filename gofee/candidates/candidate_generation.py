@@ -283,7 +283,7 @@ class StartGenerator(OffspringOperation):
                         not_isolated = True
                     else:
                         if self.cluster:  # Check isolation excluding slab atoms.
-                            not_isolated = self.check_bondlengths(a[Nslab:], indices=[Nslab+i],
+                            not_isolated = self.check_bondlengths(a[Nslab:], indices=[i],
                                                                         check_too_close=False,
                                                                         check_isolated=True)
                         else:  # All atoms.
