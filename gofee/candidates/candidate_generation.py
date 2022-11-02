@@ -279,7 +279,7 @@ class StartGenerator(OffspringOperation):
                     not_too_close = self.check_bondlengths(a, indices=[Nslab+i],
                                                           check_too_close=True,
                                                           check_isolated=False)
-                    if len(a) == 1:  # The first atom
+                    if len(a[Nslab:]) == 1:  # The first atom
                         not_isolated = True
                     else:
                         if self.cluster:  # Check isolation excluding slab atoms.
