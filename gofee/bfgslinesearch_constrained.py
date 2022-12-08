@@ -3,6 +3,8 @@ from ase.optimize.bfgslinesearch import BFGSLineSearch
 from ase.constraints import FixAtoms
 from ase.data import covalent_radii
 from ase.ga.utilities import get_mic_distance
+from ase.io import read, write
+from ase.io.trajectory import Trajectory
 
 from gofee.utils import check_valid_bondlengths
 
@@ -99,6 +101,24 @@ class BFGSLineSearch_constrained(BFGSLineSearch):
                 valid_bondlengths = False
         return valid_bondlengths
 
+###
+def combine_traj(bfgs_tot='bfgs_tot.traj', bfgs_loc='bfgs_loc.traj'):
+    """
+    'bfgs_loc.traj' will be added to the 'bfgs_tot.traj'
+    
+    You will maybe only need to specify the 'bfgs_loc.traj'.  
+    """
+    
+    bfgs_tot = Trajectory(filename=bfgs_tot, mode='a')
+    bfgs_loc = Trajectory(filename=bfgs_loc)
+    
+    for atoms in bfgs_loc:
+        bfgs_tot.write(atoms)
+
+    bfgs_tot.close()
+    bfgs_loc.close()    
+###
+
 
 def relax(structure, calc, Fmax=0.05, steps_max=200, max_relax_dist=None, position_constraint=None):
     a = structure.copy()
@@ -112,8 +132,14 @@ def relax(structure, calc, Fmax=0.05, steps_max=200, max_relax_dist=None, positi
                                          logfile=None,
                                          pos_init=pos_init,
                                          max_relax_dist=max_relax_dist,
+                                         trajectory='bfgs_ls.traj',
                                          position_constraint=position_constraint)
+
+                                        # append_trajectory=True,
         dyn.run(fmax = Fmax, steps = steps_max)
+        ###
+        combine_traj(bfgs_tot='bfgs_tot.traj', bfgs_loc='bfgs_ls.traj')
+        ###
     except Exception as err:
         print('Error in surrogate-relaxation:', err, flush=True)
         traceback.print_exc()

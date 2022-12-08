@@ -474,7 +474,9 @@ class GOFEE():
         """
         a = self.comm.bcast(a, root=0)
         a.wrap()
-
+        ###
+        traj = Trajectory('local_opt.traj','a',a)
+        ###
         if isinstance(self.calc, Dftb):
             if self.master:
                 try:
@@ -483,6 +485,9 @@ class GOFEE():
                     F = a.get_forces()
                     results = {'energy': E, 'forces': F}
                     calc_sp = SinglePointCalculator(a, **results)
+                    ###
+                   # calc_sp.attach(traj.write)
+                    ###
                     a.set_calculator(calc_sp)
                     success = True
                 except:
@@ -499,10 +504,15 @@ class GOFEE():
             F = a.get_forces()
             results = {'energy': E, 'forces': F}
             calc_sp = SinglePointCalculator(a, **results)
+            ###
+           # calc_sp.attach(traj.write)
+            ###
             a.set_calculator(calc_sp)
 
         self.write(a)
-
+        ###
+       # traj.close()
+        ###
         return a
 
     def write(self, a):
