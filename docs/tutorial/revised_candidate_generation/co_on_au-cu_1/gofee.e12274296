@@ -1,0 +1,6 @@
+/home01/x2400a01/anaconda3/envs/intelpython/lib/python3.6/site-packages/numpy/linalg/linalg.py:2513: RuntimeWarning: divide by zero encountered in sqrt
+  return sqrt(add.reduce(s, axis=axis, keepdims=keepdims))
+/home01/x2400a01/anaconda3/envs/intelpython/lib/python3.6/site-packages/numpy/linalg/linalg.py:2513: RuntimeWarning: invalid value encountered in sqrt
+  return sqrt(add.reduce(s, axis=axis, keepdims=keepdims))
+/home01/x2400a01/.local/lib/python3.6/site-packages/ase/atoms.py:968: VisibleDeprecationWarning: Use get_global_number_of_atoms() instead
+  np.VisibleDeprecationWarning)
