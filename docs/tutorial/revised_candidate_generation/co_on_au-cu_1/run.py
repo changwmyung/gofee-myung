@@ -104,6 +104,13 @@ search = GOFEE(calc=calc,
                candidate_generator=candidate_generator,
                max_steps=150,
                population_size=5,
-               position_constraint=box_constraint)
+               position_constraint=box_constraint,
+               bfgs_traj='bfgs.traj')
+""" 
+If you set "bfgs_traj='bfgs.traj", then the 'bfgs.traj' and 'bfgs_tot.traj' files will be generated,
+but "bfgs_traj=None" or not set this parameter, then the bfgs related trajectory files will not be generated. 
+
+The 'bfgs_tot.traj' is include the assembled information of each local optimization processes.
+"""
 search.run()
 

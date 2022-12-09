@@ -31,6 +31,22 @@ def pos_add_sphere_shell(rmin, rmax):
                             np.cos(phi)])
     return pos_add
 
+def get_mol_bondlength(mol):
+    """
+    This funciton is used to check molecule's longest bond length
+    """
+    Ntop = len(mol)
+    num = np.reshape(mol,(Ntop,-1))
+    
+    r_cov = np.array([covalent_radii[n] for n in num])
+    d = np.reshape(r_cov,(1,-1))
+    b = np.sort(d)[:, ::-1]
+    mol_bl = b[:,0]+b[:,1]
+    
+    return mol_bl
+
+
+
 class RattleMutation(OffspringOperation):
     """Class to perform rattle mutations on structures.
 
@@ -85,6 +101,10 @@ class RattleMutation(OffspringOperation):
         Natoms = len(a)
         Nslab = Natoms - self.n_top
 
+	   # a_atoms_indices = np.array([atom.number for atom in a])
+	   # mol = a_atoms_indices[Nslab:]
+	   # mol_bl = get_mol_bondlength(mol)
+
         # Randomly select indices of atoms to permute - in random order.
         indices_to_rattle = np.arange(Nslab,Natoms)[np.random.rand(self.n_top)
                                                      < self.probability]
@@ -103,7 +123,7 @@ class RattleMutation(OffspringOperation):
                 # Check position constraint
                 obey_constraint = self.check_constraints(a.positions[i])
                 # Check if rattle was valid
-                valid_bondlengths = self.check_bondlengths(a, indices=[i])
+                valid_bondlengths = self.check_bondlengths(a, indices=[i]) 
 
                 valid_operation = valid_bondlengths and obey_constraint
                 if not valid_operation:

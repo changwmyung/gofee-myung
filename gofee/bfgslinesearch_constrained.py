@@ -120,7 +120,7 @@ def combine_traj(bfgs_tot='bfgs_tot.traj', bfgs_loc='bfgs_loc.traj'):
 ###
 
 
-def relax(structure, calc, Fmax=0.05, steps_max=200, max_relax_dist=None, position_constraint=None):
+def relax(structure, calc, Fmax=0.05, steps_max=200, max_relax_dist=None, position_constraint=None, bfgs_traj=None):
     a = structure.copy()
     # Set calculator 
     a.set_calculator(calc)
@@ -132,13 +132,16 @@ def relax(structure, calc, Fmax=0.05, steps_max=200, max_relax_dist=None, positi
                                          logfile=None,
                                          pos_init=pos_init,
                                          max_relax_dist=max_relax_dist,
-                                         trajectory='bfgs_ls.traj',
+                                         trajectory=bfgs_traj,
                                          position_constraint=position_constraint)
 
                                         # append_trajectory=True,
         dyn.run(fmax = Fmax, steps = steps_max)
         ###
-        combine_traj(bfgs_tot='bfgs_tot.traj', bfgs_loc='bfgs_ls.traj')
+        if bfgs_traj is None:
+            pass
+        else:
+            combine_traj(bfgs_tot='bfgs_tot.traj', bfgs_loc=bfgs_traj)
         ###
     except Exception as err:
         print('Error in surrogate-relaxation:', err, flush=True)

@@ -107,7 +107,7 @@ class GOFEE():
 
     restart: str
         Filename for restart file.
-    """
+    """###
     def __init__(self, structures=None,
                  calc=None,
                  gpr=None,
@@ -124,8 +124,9 @@ class GOFEE():
                  position_constraint=None,
                  trajectory='structures.traj',
                  logfile='search.log',
-                 restart='restart.pickl'):
-        
+                 restart='restart.pickl',
+				 bfgs_traj=None):
+		###
         if structures is None:
             assert startgenerator is not None
             self.structures = None
@@ -185,7 +186,10 @@ class GOFEE():
         self.min_certainty = min_certainty
         self.position_constraint = position_constraint
         self.restart = restart
-        
+        ###
+        self.bfgs_traj = bfgs_traj
+        ###
+
         # Add position-constraint to candidate-generator
         self.candidate_generator.set_constraints(position_constraint)
 
@@ -398,7 +402,8 @@ class GOFEE():
         calc = self.gpr.get_calculator(kappa)
         a_relaxed = relax(a, calc, Fmax=Fmax, steps_max=steps,
                           max_relax_dist=self.max_relax_dist,
-                          position_constraint=self.position_constraint)
+                          position_constraint=self.position_constraint,
+						  bfgs_traj=self.bfgs_traj)
         # Evaluate uncertainty
         E, Estd = self.gpr.predict_energy(a_relaxed, eval_std=True)
 
@@ -474,9 +479,6 @@ class GOFEE():
         """
         a = self.comm.bcast(a, root=0)
         a.wrap()
-        ###
-        traj = Trajectory('local_opt.traj','a',a)
-        ###
         if isinstance(self.calc, Dftb):
             if self.master:
                 try:
@@ -485,9 +487,6 @@ class GOFEE():
                     F = a.get_forces()
                     results = {'energy': E, 'forces': F}
                     calc_sp = SinglePointCalculator(a, **results)
-                    ###
-                   # calc_sp.attach(traj.write)
-                    ###
                     a.set_calculator(calc_sp)
                     success = True
                 except:
@@ -504,15 +503,9 @@ class GOFEE():
             F = a.get_forces()
             results = {'energy': E, 'forces': F}
             calc_sp = SinglePointCalculator(a, **results)
-            ###
-           # calc_sp.attach(traj.write)
-            ###
             a.set_calculator(calc_sp)
 
         self.write(a)
-        ###
-       # traj.close()
-        ###
         return a
 
     def write(self, a):
