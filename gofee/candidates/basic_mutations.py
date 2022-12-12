@@ -2,6 +2,8 @@ import numpy as np
 from abc import ABC, abstractmethod
 from ase.data import covalent_radii
 from ase.geometry import get_distances
+from ase.data import atomic_numbers, atomic_names, atomic_masses, covalent_radii
+from ase.geometry import get_distances
 
 from ase.visualize import view
 
@@ -31,6 +33,7 @@ def pos_add_sphere_shell(rmin, rmax):
                             np.cos(phi)])
     return pos_add
 
+###
 def get_mol_bondlength(mol):
     """
     This funciton is used to check molecule's longest bond length
@@ -45,6 +48,54 @@ def get_mol_bondlength(mol):
     
     return mol_bl
 
+
+def get_bondlengths_array(Nslab,n_top,pos_init,pos_final):
+    """
+    This function is find the atom's distances that composed the molecule(stoichiometry)
+    
+    pos_init: Atoms object 
+        this mean the molecular position before mutation
+        ex) pos_init = a
+    
+    pos_final: Atoms object
+        this is molecular position after mutation
+        ex) pos_fial = 
+    """
+    #Nslab=len(slab)
+    #Ntop=len(stoichiometry)
+    Natoms=Nslab+n_top
+    pos_i=pos_init.get_positions()
+    pos_f=pos_final.get_positions()
+    dist_i=[]
+    dist_f=[]
+    for i in range(Nslab,Natoms-1):
+        dist=get_distances(pos_i[i],pos_i[i+1],cell=pos_init.get_cell(),pbc=pos_init.get_pbc())[1]
+        dist_i=np.append(dist_i,dist)
+        #print(f'dist_{i},{i+1}={dist}')
+    
+    for i in range(Nslab,Natoms-1):
+        dist=get_distances(pos_f[i],pos_f[i+1],cell=pos_final.get_cell(),pbc=pos_final.get_pbc())[1]
+        dist_f=np.append(dist_f,dist)
+        #print(f'dist_{i},{i+1}={dist}')
+    
+    return dist_i, dist_f            
+
+
+def check_mol_lengths(dist_i,dist_f,bl_limit):
+    matrix_size=len(dist_i)
+    mol_config=True
+    for i in range(matrix_size):
+        if abs(dist_i[i]-dist_f[i]) > bl_limit:
+            mol_config=False
+            return mol_config
+            break       
+            
+        else:
+            return mol_config
+            continue
+            
+        return mol_config
+###             
 
 
 class RattleMutation(OffspringOperation):
@@ -98,9 +149,10 @@ class RattleMutation(OffspringOperation):
         self.rattle_range.
         """
         a = atoms.copy()
+        pos_init = atoms.copy()
         Natoms = len(a)
         Nslab = Natoms - self.n_top
-
+        ###
 	   # a_atoms_indices = np.array([atom.number for atom in a])
 	   # mol = a_atoms_indices[Nslab:]
 	   # mol_bl = get_mol_bondlength(mol)
@@ -111,25 +163,46 @@ class RattleMutation(OffspringOperation):
         indices_to_rattle = np.random.permutation(indices_to_rattle)
         if len(indices_to_rattle) == 0:
             indices_to_rattle = [np.random.randint(Nslab,Natoms)]
-
-        # Perform rattle operations in sequence.
         for i in indices_to_rattle:
-            posi_0 = np.copy(a.positions[i])
+            posi_0 = np.copy(a.position[i])
             for _ in range(200):
                 # Perform rattle
                 pos_add = pos_add_sphere(self.rattle_range)
                 a.positions[i] += pos_add
-                
+
                 # Check position constraint
                 obey_constraint = self.check_constraints(a.positions[i])
-                # Check if rattle was valid
-                valid_bondlengths = self.check_bondlengths(a, indices=[i]) 
+                # Check rattle was valid
+                 
+                dist_i, dist_f = get_bondlengths_array(Nslab=Nslab, n_top=self.n_top, pos_init=pos_init, pos_final=a)
+                bl_limit = 0.3
+                mol_config = check_mol_lengths(dist_i,dist_f,bl_limit)
+                
+                valid_operation = mol_config and obey_constraint
 
-                valid_operation = valid_bondlengths and obey_constraint
                 if not valid_operation:
                     a.positions[i] = posi_0
                 else:
                     break
+       ###         
+        # Perform rattle operations in sequence.
+       # for i in indices_to_rattle:
+       #     posi_0 = np.copy(a.positions[i])
+       #     for _ in range(200):
+       #         # Perform rattle
+       #         pos_add = pos_add_sphere(self.rattle_range)
+       #         a.positions[i] += pos_add
+       #         
+       #         # Check position constraint
+       #         obey_constraint = self.check_constraints(a.positions[i])
+       #         # Check if rattle was valid
+       #         valid_bondlengths = self.check_bondlengths(a, indices=[i]) 
+
+       #         valid_operation = valid_bondlengths and obey_constraint
+       #         if not valid_operation:
+       #             a.positions[i] = posi_0
+       #         else:
+       #             break
         if valid_operation:
             return a
         else:

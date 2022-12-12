@@ -1210,8 +1210,6 @@ static CYTHON_INLINE __pyx_t_double_complex __pyx_t_double_complex_from_parts(do
 
 
 /*--- Type declarations ---*/
-struct __pyx_obj_5cymem_5cymem_PyMalloc;
-struct __pyx_obj_5cymem_5cymem_PyFree;
 struct __pyx_obj_5cymem_5cymem_Pool;
 struct __pyx_obj_5cymem_5cymem_Address;
 
@@ -1250,21 +1248,6 @@ typedef npy_clongdouble __pyx_t_5numpy_clongdouble_t;
  * cdef inline object PyArray_MultiIterNew1(a):
  */
 typedef npy_cdouble __pyx_t_5numpy_complex_t;
-
-/* "cymem/cymem.pxd":1
- * ctypedef void* (*malloc_t)(size_t n)             # <<<<<<<<<<<<<<
- * ctypedef void (*free_t)(void *p)
- * 
- */
-typedef void *(*__pyx_t_5cymem_5cymem_malloc_t)(size_t);
-
-/* "cymem/cymem.pxd":2
- * ctypedef void* (*malloc_t)(size_t n)
- * ctypedef void (*free_t)(void *p)             # <<<<<<<<<<<<<<
- * 
- * cdef class PyMalloc:
- */
-typedef void (*__pyx_t_5cymem_5cymem_free_t)(void *);
 struct __pyx_t_5prior_Point;
 typedef struct __pyx_t_5prior_Point __pyx_t_5prior_Point;
 
@@ -1279,37 +1262,7 @@ struct __pyx_t_5prior_Point {
   double coord[3];
 };
 
-/* "cymem/cymem.pxd":4
- * ctypedef void (*free_t)(void *p)
- * 
- * cdef class PyMalloc:             # <<<<<<<<<<<<<<
- *     cdef malloc_t malloc
- *     cdef void _set(self, malloc_t malloc)
- */
-struct __pyx_obj_5cymem_5cymem_PyMalloc {
-  PyObject_HEAD
-  struct __pyx_vtabstruct_5cymem_5cymem_PyMalloc *__pyx_vtab;
-  __pyx_t_5cymem_5cymem_malloc_t malloc;
-};
-
-
-/* "cymem/cymem.pxd":10
- * cdef PyMalloc WrapMalloc(malloc_t malloc)
- * 
- * cdef class PyFree:             # <<<<<<<<<<<<<<
- *     cdef free_t free
- *     cdef void _set(self, free_t free)
- */
-struct __pyx_obj_5cymem_5cymem_PyFree {
-  PyObject_HEAD
-  struct __pyx_vtabstruct_5cymem_5cymem_PyFree *__pyx_vtab;
-  __pyx_t_5cymem_5cymem_free_t free;
-};
-
-
-/* "cymem/cymem.pxd":16
- * cdef PyFree WrapFree(free_t free)
- * 
+/* "cymem/cymem.pxd":1
  * cdef class Pool:             # <<<<<<<<<<<<<<
  *     cdef readonly size_t size
  *     cdef readonly dict addresses
@@ -1320,58 +1273,23 @@ struct __pyx_obj_5cymem_5cymem_Pool {
   size_t size;
   PyObject *addresses;
   PyObject *refs;
-  struct __pyx_obj_5cymem_5cymem_PyMalloc *pymalloc;
-  struct __pyx_obj_5cymem_5cymem_PyFree *pyfree;
 };
 
 
-/* "cymem/cymem.pxd":28
+/* "cymem/cymem.pxd":11
  * 
  * 
  * cdef class Address:             # <<<<<<<<<<<<<<
  *     cdef void* ptr
- *     cdef readonly PyMalloc pymalloc
  */
 struct __pyx_obj_5cymem_5cymem_Address {
   PyObject_HEAD
   void *ptr;
-  struct __pyx_obj_5cymem_5cymem_PyMalloc *pymalloc;
-  struct __pyx_obj_5cymem_5cymem_PyFree *pyfree;
 };
 
 
 
-/* "cymem/cymem.pxd":4
- * ctypedef void (*free_t)(void *p)
- * 
- * cdef class PyMalloc:             # <<<<<<<<<<<<<<
- *     cdef malloc_t malloc
- *     cdef void _set(self, malloc_t malloc)
- */
-
-struct __pyx_vtabstruct_5cymem_5cymem_PyMalloc {
-  void (*_set)(struct __pyx_obj_5cymem_5cymem_PyMalloc *, __pyx_t_5cymem_5cymem_malloc_t);
-};
-static struct __pyx_vtabstruct_5cymem_5cymem_PyMalloc *__pyx_vtabptr_5cymem_5cymem_PyMalloc;
-
-
-/* "cymem/cymem.pxd":10
- * cdef PyMalloc WrapMalloc(malloc_t malloc)
- * 
- * cdef class PyFree:             # <<<<<<<<<<<<<<
- *     cdef free_t free
- *     cdef void _set(self, free_t free)
- */
-
-struct __pyx_vtabstruct_5cymem_5cymem_PyFree {
-  void (*_set)(struct __pyx_obj_5cymem_5cymem_PyFree *, __pyx_t_5cymem_5cymem_free_t);
-};
-static struct __pyx_vtabstruct_5cymem_5cymem_PyFree *__pyx_vtabptr_5cymem_5cymem_PyFree;
-
-
-/* "cymem/cymem.pxd":16
- * cdef PyFree WrapFree(free_t free)
- * 
+/* "cymem/cymem.pxd":1
  * cdef class Pool:             # <<<<<<<<<<<<<<
  *     cdef readonly size_t size
  *     cdef readonly dict addresses
@@ -2063,8 +1981,6 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *, cha
 /* Module declarations from 'libc.math' */
 
 /* Module declarations from 'cymem.cymem' */
-static PyTypeObject *__pyx_ptype_5cymem_5cymem_PyMalloc = 0;
-static PyTypeObject *__pyx_ptype_5cymem_5cymem_PyFree = 0;
 static PyTypeObject *__pyx_ptype_5cymem_5cymem_Pool = 0;
 static PyTypeObject *__pyx_ptype_5cymem_5cymem_Address = 0;
 
@@ -8696,19 +8612,13 @@ static int __Pyx_modinit_type_import_code(void) {
   __pyx_ptype_5numpy_ufunc = __Pyx_ImportType(__pyx_t_1, "numpy", "ufunc", sizeof(PyUFuncObject), __Pyx_ImportType_CheckSize_Ignore);
    if (!__pyx_ptype_5numpy_ufunc) __PYX_ERR(1, 917, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = PyImport_ImportModule("cymem.cymem"); if (unlikely(!__pyx_t_1)) __PYX_ERR(3, 4, __pyx_L1_error)
+  __pyx_t_1 = PyImport_ImportModule("cymem.cymem"); if (unlikely(!__pyx_t_1)) __PYX_ERR(3, 1, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_ptype_5cymem_5cymem_PyMalloc = __Pyx_ImportType(__pyx_t_1, "cymem.cymem", "PyMalloc", sizeof(struct __pyx_obj_5cymem_5cymem_PyMalloc), __Pyx_ImportType_CheckSize_Warn);
-   if (!__pyx_ptype_5cymem_5cymem_PyMalloc) __PYX_ERR(3, 4, __pyx_L1_error)
-  __pyx_vtabptr_5cymem_5cymem_PyMalloc = (struct __pyx_vtabstruct_5cymem_5cymem_PyMalloc*)__Pyx_GetVtable(__pyx_ptype_5cymem_5cymem_PyMalloc->tp_dict); if (unlikely(!__pyx_vtabptr_5cymem_5cymem_PyMalloc)) __PYX_ERR(3, 4, __pyx_L1_error)
-  __pyx_ptype_5cymem_5cymem_PyFree = __Pyx_ImportType(__pyx_t_1, "cymem.cymem", "PyFree", sizeof(struct __pyx_obj_5cymem_5cymem_PyFree), __Pyx_ImportType_CheckSize_Warn);
-   if (!__pyx_ptype_5cymem_5cymem_PyFree) __PYX_ERR(3, 10, __pyx_L1_error)
-  __pyx_vtabptr_5cymem_5cymem_PyFree = (struct __pyx_vtabstruct_5cymem_5cymem_PyFree*)__Pyx_GetVtable(__pyx_ptype_5cymem_5cymem_PyFree->tp_dict); if (unlikely(!__pyx_vtabptr_5cymem_5cymem_PyFree)) __PYX_ERR(3, 10, __pyx_L1_error)
   __pyx_ptype_5cymem_5cymem_Pool = __Pyx_ImportType(__pyx_t_1, "cymem.cymem", "Pool", sizeof(struct __pyx_obj_5cymem_5cymem_Pool), __Pyx_ImportType_CheckSize_Warn);
-   if (!__pyx_ptype_5cymem_5cymem_Pool) __PYX_ERR(3, 16, __pyx_L1_error)
-  __pyx_vtabptr_5cymem_5cymem_Pool = (struct __pyx_vtabstruct_5cymem_5cymem_Pool*)__Pyx_GetVtable(__pyx_ptype_5cymem_5cymem_Pool->tp_dict); if (unlikely(!__pyx_vtabptr_5cymem_5cymem_Pool)) __PYX_ERR(3, 16, __pyx_L1_error)
+   if (!__pyx_ptype_5cymem_5cymem_Pool) __PYX_ERR(3, 1, __pyx_L1_error)
+  __pyx_vtabptr_5cymem_5cymem_Pool = (struct __pyx_vtabstruct_5cymem_5cymem_Pool*)__Pyx_GetVtable(__pyx_ptype_5cymem_5cymem_Pool->tp_dict); if (unlikely(!__pyx_vtabptr_5cymem_5cymem_Pool)) __PYX_ERR(3, 1, __pyx_L1_error)
   __pyx_ptype_5cymem_5cymem_Address = __Pyx_ImportType(__pyx_t_1, "cymem.cymem", "Address", sizeof(struct __pyx_obj_5cymem_5cymem_Address), __Pyx_ImportType_CheckSize_Warn);
-   if (!__pyx_ptype_5cymem_5cymem_Address) __PYX_ERR(3, 28, __pyx_L1_error)
+   if (!__pyx_ptype_5cymem_5cymem_Address) __PYX_ERR(3, 11, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_RefNannyFinishContext();
   return 0;
