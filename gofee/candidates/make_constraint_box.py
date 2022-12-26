@@ -13,9 +13,9 @@ class MakeBox():
     This class used to make constraint_box, using bond length and slab.
     
     1)  specified_atoms: int; atomic number. 
-        If you want to specify the atoms that may want to be excepted, set this parameter.
+        If you want to specify the atoms that may want to be an exception or to be a criterion, set this parameter.
         ex) object=Make_Box(specified_atoms=79,center_point=None,stoichiometry=stoichimetry,...),
-            in this case, the portion of the Au atom is excluded from the box.
+            in this case, the box will be set based on this atoms.
     
     2)  center_point: list; 2-dimensional coordinates.
         If you want to specify the center position of the box, set this parameter.
@@ -84,21 +84,21 @@ class MakeBox():
         return longest_bl
     
     
-    def except_pos(self):
-        """This function is used to get the except position's coordinate file if you want that."""
+    def specify_pos(self):
+        """This function is used to get the specified position's coordinate file if you want that."""
 
         indices=[atom.index for atom in self.slab if atom.number == self.specified_atoms]
         print(f'indices of specified_atoms = {indices}')
-        except_posi=[]
-        except_poscar=np.reshape(except_posi,(-1,3))
+        specify_posi=[]
+        specify_poscar=np.reshape(specify_posi,(-1,3))
         c = self.slab.get_positions()
 
         for i in indices:
-            except_poscar = np.vstack([except_poscar,c[i]])
-        print(f'except_poscar = {except_poscar}')
-        print(f'len(except_poscar) = {len(except_poscar)}')
+            specify_poscar = np.vstack([specify_poscar,c[i]])
+        print(f'specify_poscar = {specify_poscar}')
+        print(f'len(specify_poscar) = {len(specify_poscar)}')
 
-        return except_poscar
+        return specify_poscar
 
     
     def make_box(self):
@@ -168,15 +168,15 @@ class MakeBox():
 
         else:
             # Parameters for box setting
-            except_poscar = self.except_pos()
+            specify_poscar = self.specify_pos()
 
-            x_max = np.max(except_poscar[:,0])
-            y_max = np.max(except_poscar[:,1])
-            z_max = np.max(except_poscar[:,2])
+            x_max = np.max(specify_poscar[:,0])
+            y_max = np.max(specify_poscar[:,1])
+            z_max = np.max(specify_poscar[:,2])
 
-            x_min = np.min(except_poscar[:,0])
-            y_min = np.min(except_poscar[:,1])
-            z_min = np.min(except_poscar[:,2])
+            x_min = np.min(specify_poscar[:,0])
+            y_min = np.min(specify_poscar[:,1])
+            z_min = np.min(specify_poscar[:,2])
 
             # Set size of box
             v[0][0] = x_max-x_min+((2/3)*self.bl_factor*longest_bl)
@@ -213,16 +213,16 @@ class MakeBox():
         based on the center of the nanoparticles.  
         """
 
-        except_pos = self.except_pos() 
+        specify_pos = self.specify_pos() 
         bondlength = self.check_bond_length() 
 
-        x_max = np.max(except_pos[:,0])
-        y_max = np.max(except_pos[:,1])
-        z_max = np.max(except_pos[:,2])
+        x_max = np.max(specify_pos[:,0])
+        y_max = np.max(specify_pos[:,1])
+        z_max = np.max(specify_pos[:,2])
 
-        x_min = np.min(except_pos[:,0])
-        y_min = np.min(except_pos[:,1])
-        z_min = np.min(except_pos[:,2])
+        x_min = np.min(specify_pos[:,0])
+        y_min = np.min(specify_pos[:,1])
+        z_min = np.min(specify_pos[:,2])
 
         radius_x = (x_max-x_min)+2*bondlength
         radius_y = (y_max-y_min)+2*bondlength

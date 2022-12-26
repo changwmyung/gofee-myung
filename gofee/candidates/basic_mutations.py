@@ -131,9 +131,9 @@ class RattleMutation(OffspringOperation):
         Name of the operation, which will be saved in
         info-dict of structures, on which the operation is applied.    
     """
-    def __init__(self, n_top, Nrattle=3, rattle_range=3,
+    def __init__(self, n_top, Nrattle=3, rattle_range=0.5,
                  description='RattleMutation', *args, **kwargs):
-        OffspringOperation.__init__(self, *args, **kwargs)
+        OffspringOperation.__init__(self, *args, **kwargs) # rattle_range=3 : default
         self.description = description
         self.n_top = n_top
         self.probability = Nrattle/n_top
@@ -164,7 +164,7 @@ class RattleMutation(OffspringOperation):
         if len(indices_to_rattle) == 0:
             indices_to_rattle = [np.random.randint(Nslab,Natoms)]
         for i in indices_to_rattle:
-            posi_0 = np.copy(a.position[i])
+            posi_0 = np.copy(a.positions[i])
             for _ in range(200):
                 # Perform rattle
                 pos_add = pos_add_sphere(self.rattle_range)
@@ -186,17 +186,17 @@ class RattleMutation(OffspringOperation):
                     break
        ###         
         # Perform rattle operations in sequence.
-       # for i in indices_to_rattle:
+	   # for i in indices_to_rattle:
        #     posi_0 = np.copy(a.positions[i])
        #     for _ in range(200):
        #         # Perform rattle
        #         pos_add = pos_add_sphere(self.rattle_range)
        #         a.positions[i] += pos_add
-       #         
+       #        
        #         # Check position constraint
        #         obey_constraint = self.check_constraints(a.positions[i])
        #         # Check if rattle was valid
-       #         valid_bondlengths = self.check_bondlengths(a, indices=[i]) 
+       #         valid_bondlengths = self.check_bondlengths(a[Nslab:], indices=[i]) # a
 
        #         valid_operation = valid_bondlengths and obey_constraint
        #         if not valid_operation:
