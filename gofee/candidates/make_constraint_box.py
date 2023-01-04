@@ -184,7 +184,7 @@ class MakeBox():
 
             # Set size of box
             v[0][0] = x_max-x_min+((2/3)*self.bl_factor*longest_bl)
-            v[1][1] = y_max-x_min+((2/3)*self.bl_factor*longest_bl)
+            v[1][1] = y_max-y_min+((2/3)*self.bl_factor*longest_bl)
             # Set height of box
             v[2][2] = z_max-z_min+longest_bl
             
