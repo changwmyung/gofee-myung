@@ -123,7 +123,11 @@ class MakeBox():
         slab_x_max = np.max(template[:,0])
         slab_y_max = np.max(template[:,1])
         slab_z_max = np.max(template[:,2])
-        
+        for i in range(3):
+            for j in range(3):
+                if i != j:
+                    v[i][j]=0
+
         if self.specified_atoms is None:
             # Parameters for box setting
             # Set size of box

@@ -131,7 +131,7 @@ class RattleMutation(OffspringOperation):
         Name of the operation, which will be saved in
         info-dict of structures, on which the operation is applied.    
     """
-    def __init__(self, n_top, Nrattle=3, rattle_range=0.5,
+    def __init__(self, n_top, Nrattle=3, rattle_range=3,
                  description='RattleMutation', *args, **kwargs):
         OffspringOperation.__init__(self, *args, **kwargs) # rattle_range=3 : default
         self.description = description
@@ -163,46 +163,46 @@ class RattleMutation(OffspringOperation):
         indices_to_rattle = np.random.permutation(indices_to_rattle)
         if len(indices_to_rattle) == 0:
             indices_to_rattle = [np.random.randint(Nslab,Natoms)]
-        for i in indices_to_rattle:
-            posi_0 = np.copy(a.positions[i])
-            for _ in range(200):
-                # Perform rattle
-                pos_add = pos_add_sphere(self.rattle_range)
-                a.positions[i] += pos_add
-
-                # Check position constraint
-                obey_constraint = self.check_constraints(a.positions[i])
-                # Check rattle was valid
-                 
-                dist_i, dist_f = get_bondlengths_array(Nslab=Nslab, n_top=self.n_top, pos_init=pos_init, pos_final=a)
-                bl_limit = 0.3
-                mol_config = check_mol_lengths(dist_i,dist_f,bl_limit)
-                
-                valid_operation = mol_config and obey_constraint
-
-                if not valid_operation:
-                    a.positions[i] = posi_0
-                else:
-                    break
-       ###         
-        # Perform rattle operations in sequence.
 	   # for i in indices_to_rattle:
        #     posi_0 = np.copy(a.positions[i])
        #     for _ in range(200):
        #         # Perform rattle
        #         pos_add = pos_add_sphere(self.rattle_range)
        #         a.positions[i] += pos_add
-       #        
+
        #         # Check position constraint
        #         obey_constraint = self.check_constraints(a.positions[i])
-       #         # Check if rattle was valid
-       #         valid_bondlengths = self.check_bondlengths(a[Nslab:], indices=[i]) # a
+       #         # Check rattle was valid
+       #          
+       #         dist_i, dist_f = get_bondlengths_array(Nslab=Nslab, n_top=self.n_top, pos_init=pos_init, pos_final=a)
+       #         bl_limit = 0.3
+       #         mol_config = check_mol_lengths(dist_i,dist_f,bl_limit)
+       #         
+       #         valid_operation = mol_config and obey_constraint
 
-       #         valid_operation = valid_bondlengths and obey_constraint
        #         if not valid_operation:
        #             a.positions[i] = posi_0
        #         else:
        #             break
+       ##         
+	   # Perform rattle operations in sequence.
+        for i in indices_to_rattle:
+            posi_0 = np.copy(a.positions[i])
+            for _ in range(200):
+                # Perform rattle
+                pos_add = pos_add_sphere(self.rattle_range)
+                a.positions[i] += pos_add
+               
+                # Check position constraint
+                obey_constraint = self.check_constraints(a.positions[i])
+                # Check if rattle was valid
+                valid_bondlengths = self.check_bondlengths(a, indices=[i]) # a
+
+                valid_operation = valid_bondlengths and obey_constraint
+                if not valid_operation:
+                    a.positions[i] = posi_0
+                else:
+                    break
         if valid_operation:
             return a
         else:
