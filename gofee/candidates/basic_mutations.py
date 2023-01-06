@@ -96,6 +96,49 @@ def check_mol_lengths(dist_i,dist_f,bl_limit):
             
         return mol_config
 ###             
+###
+
+def get_bond_list(mol, bl_limit):
+    """ 
+    This function will find the molecule's bonds and make a bond_list
+    """
+    Ntop = len(mol)
+    bond_list = []
+    for i in range(Ntop):
+        for j in range(Ntop):
+            if i < j:
+                i_cov = covalent_radii[mol[i].number]
+                j_cov = covalent_radii[mol[j].number]
+                if abs(get_distances(mol.get_positions()[i],mol.get_positions()[j])[1]) <= (i_cov + j_cov + bl_limit):
+                    #print(f'{i}-{j}: {mol.symbols[i]}-{mol.symbols[j]} bond')
+                    bond_list.append(f'{mol.symbols[i]}{i}-{mol.symbols[j]}{j}')
+
+    return bond_list
+
+
+def check_mol_config(ref_mol, mut_mol, bl_limit):
+    """
+    This function will evaluate the mutated molecule 
+    about if the molecule have been broken during the rattle mutation
+
+    If that broken, "mol_config = False"
+    """
+    ref_bond_list = get_bond_list(ref_mol, bl_limit)
+    mut_bond_list = get_bond_list(mut_mol, bl_limit)
+    mol_config = True
+
+    if len(ref_bond_list) == len(mut_bond_list):
+        for i in range(len(ref_bond_list)):
+            if ref_bond_list[i] == mut_bond_list[i]:
+                continue
+            else:
+                mol_config = False
+                return mol_config
+        return mol_config
+    else:
+        mol_config = False
+        return mol_config
+###
 
 
 class RattleMutation(OffspringOperation):
@@ -131,13 +174,19 @@ class RattleMutation(OffspringOperation):
         Name of the operation, which will be saved in
         info-dict of structures, on which the operation is applied.    
     """
-    def __init__(self, n_top, Nrattle=3, rattle_range=3,
+    def __init__(self, n_top, Nrattle=3, rattle_range=3, bl_limit=0.2,
                  description='RattleMutation', *args, **kwargs):
         OffspringOperation.__init__(self, *args, **kwargs) # rattle_range=3 : default
         self.description = description
-        self.n_top = n_top
-        self.probability = Nrattle/n_top
+        if type(n_top) is int:
+            self.n_top = n_top
+            self.probability = Nrattle/n_top
+        else:
+            self.n_top = len(n_top)
+            self.molecule = n_top
+            self.probability = Nrattle/len(n_top)
         self.rattle_range = rattle_range
+        self.bl_limit = bl_limit
 
     def operation(self, parents):
         a = parents[0]
@@ -163,46 +212,49 @@ class RattleMutation(OffspringOperation):
         indices_to_rattle = np.random.permutation(indices_to_rattle)
         if len(indices_to_rattle) == 0:
             indices_to_rattle = [np.random.randint(Nslab,Natoms)]
+        for i in indices_to_rattle:
+            posi_0 = np.copy(a.positions[i])
+            for _ in range(1000):
+		   # while True:
+                # Perform rattle
+                pos_add = pos_add_sphere(self.rattle_range)
+                a.positions[i] += pos_add
+
+                # Check position constraint
+                obey_constraint = self.check_constraints(a.positions[i])
+                # Check if rattle was valid
+                 
+				#dist_i, dist_f = get_bondlengths_array(Nslab=Nslab, n_top=self.n_top, pos_init=pos_init, pos_final=a)
+                
+                #mol_config = check_mol_lengths(dist_i,dist_f,bl_limit)
+                #from gofee.candidates import StartGenerator
+                mol_config = check_mol_config(ref_mol=self.molecule,mut_mol=a[Nslab:],bl_limit=self.bl_limit)
+
+                valid_operation = mol_config and obey_constraint
+
+                if not valid_operation:
+                    a.positions[i] = posi_0
+                else:
+                    break
+       ##         
+	   # Perform rattle operations in sequence.
 	   # for i in indices_to_rattle:
        #     posi_0 = np.copy(a.positions[i])
        #     for _ in range(200):
        #         # Perform rattle
        #         pos_add = pos_add_sphere(self.rattle_range)
        #         a.positions[i] += pos_add
-
+       #        
        #         # Check position constraint
        #         obey_constraint = self.check_constraints(a.positions[i])
-       #         # Check rattle was valid
-       #          
-       #         dist_i, dist_f = get_bondlengths_array(Nslab=Nslab, n_top=self.n_top, pos_init=pos_init, pos_final=a)
-       #         bl_limit = 0.3
-       #         mol_config = check_mol_lengths(dist_i,dist_f,bl_limit)
-       #         
-       #         valid_operation = mol_config and obey_constraint
+       #         # Check if rattle was valid
+       #         valid_bondlengths = self.check_bondlengths(a, indices=[i]) # a
 
+       #         valid_operation = valid_bondlengths and obey_constraint
        #         if not valid_operation:
        #             a.positions[i] = posi_0
        #         else:
        #             break
-       ##         
-	   # Perform rattle operations in sequence.
-        for i in indices_to_rattle:
-            posi_0 = np.copy(a.positions[i])
-            for _ in range(200):
-                # Perform rattle
-                pos_add = pos_add_sphere(self.rattle_range)
-                a.positions[i] += pos_add
-               
-                # Check position constraint
-                obey_constraint = self.check_constraints(a.positions[i])
-                # Check if rattle was valid
-                valid_bondlengths = self.check_bondlengths(a, indices=[i]) # a
-
-                valid_operation = valid_bondlengths and obey_constraint
-                if not valid_operation:
-                    a.positions[i] = posi_0
-                else:
-                    break
         if valid_operation:
             return a
         else:
