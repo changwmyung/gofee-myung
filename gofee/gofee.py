@@ -125,7 +125,8 @@ class GOFEE():
                  trajectory='structures.traj',
                  logfile='search.log',
                  restart='restart.pickl',
-				 bfgs_traj=None):
+                 bfgs_traj=None,
+                 candidates_list=False):
 		###
         if structures is None:
             assert startgenerator is not None
@@ -188,6 +189,7 @@ class GOFEE():
         self.restart = restart
         ###
         self.bfgs_traj = bfgs_traj
+        self.candidates_list = candidates_list
         ###
 
         # Add position-constraint to candidate-generator
@@ -296,8 +298,18 @@ class GOFEE():
             self.update_population()
             t2 = time()
             unrelaxed_candidates = self.generate_new_candidates()
+            if self.candidates_list:
+                unrelaxed_traj = Trajectory(filename='unrelaxed_candidates.traj', mode='a')
+                for i in range(len(unrelaxed_candidates)):
+                        unrelaxed_traj.write(unrelaxed_candidates[i])
+                unrelaxed_traj.close()
             t3 = time()
             relaxed_candidates = self.relax_candidates_with_surrogate(unrelaxed_candidates)
+            if self.candidates_list:
+                relaxed_traj = Trajectory(filename='relaxed_candidates.traj', mode='a')
+                for i in range(len(relaxed_candidates)):
+                        relaxed_traj.write(relaxed_candidates[i])
+                relaxed_traj.close()
             t4 = time()
             kappa = self.kappa
             a_add = []
