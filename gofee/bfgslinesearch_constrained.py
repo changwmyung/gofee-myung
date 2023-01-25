@@ -101,7 +101,7 @@ class BFGSLineSearch_constrained(BFGSLineSearch):
                 valid_bondlengths = False
         return valid_bondlengths
 
-###
+
 def combine_traj(bfgs_tot='bfgs_tot.traj', bfgs_loc='bfgs_loc.traj'):
     """
     'bfgs_loc.traj' will be added to the 'bfgs_tot.traj'
@@ -117,7 +117,6 @@ def combine_traj(bfgs_tot='bfgs_tot.traj', bfgs_loc='bfgs_loc.traj'):
 
     bfgs_tot.close()
     bfgs_loc.close()    
-###
 
 
 def relax(structure, calc, Fmax=0.05, steps_max=200, max_relax_dist=None, position_constraint=None, bfgs_traj=None):
@@ -137,12 +136,12 @@ def relax(structure, calc, Fmax=0.05, steps_max=200, max_relax_dist=None, positi
 
                                         # append_trajectory=True,
         dyn.run(fmax = Fmax, steps = steps_max)
-        ###
+
         if bfgs_traj is None:
             pass
         else:
             combine_traj(bfgs_tot='bfgs_tot.traj', bfgs_loc=bfgs_traj)
-        ###
+    
     except Exception as err:
         print('Error in surrogate-relaxation:', err, flush=True)
         traceback.print_exc()

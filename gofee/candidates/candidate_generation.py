@@ -228,35 +228,22 @@ def trans_adsorbate(molecule,box,slab,center,radius,half):
     mol = rotate_adsorbate(molecule)
     trans_mol_slab = []
     trans_mol_slab = slab.copy()
-    ###
-   # if center is None:
-   #     cent_pos = slab.get_positions()
-   #     cent_x = (np.max(cent_pos[:,0])+np.min(cent_pos[:,0]))/2
-   #     cent_y = (np.max(cent_pos[:,1])+np.min(cent_pos[:,1]))/2
-   #     cent_z = np.max(cent_pos[:,2]
-   #     center = np.array((cent_x,cent_y,cent_z))
-   # 
-   # else:
-   #     center = center
-
-    ###
+    
     if radius is None:
         trans_matrix = np.random.random(3)*(np.array(box[1])*np.identity(3))    
         trans_pos = np.array([trans_matrix[0][0],trans_matrix[1][1], trans_matrix[2][2]])
         mol_t= mol.get_positions()+trans_pos+box[0]
-        
     else:     
         trans_pos = (np.array(get_random_spherical(radius, half)))
         mol_t= mol.get_positions()+trans_pos+center
-
     return mol_t
 
 
 def get_random_spherical(radius, half):
 
     coordinate = []
-    theta = np.pi*np.random.random(1) # 0 <= theta < 180
-    phi = 2*np.pi*np.random.random(1) # 0 <= phi < 360
+    theta = np.pi*np.random.random(1) # 0 < theta < 180
+    phi = 2*np.pi*np.random.random(1) # 0 < phi < 360
     rho = radius*np.sin(theta)
     
     x = rho*np.cos(phi)
@@ -326,11 +313,6 @@ class StartGenerator(OffspringOperation):
         self.radius = radius
         self.half = half
 
-   # def operation(self, parents=None):
-   #     a = self.make_structure()
-   #     return a
-
-    ###
     def operation(self, parents=None):
         if self.molecule is None:
             a = self.make_structure()
@@ -338,7 +320,6 @@ class StartGenerator(OffspringOperation):
         else:
             a = self.make_mol_structure()
             return a
-    ###
     
     def make_structure(self):
         """ Generates a new random structure """
@@ -394,8 +375,12 @@ class StartGenerator(OffspringOperation):
         while True:
             a = []
             a = self.slab.copy()
-            
-            mole = trans_adsorbate(self.molecule, self.box, self.slab, self.center, self.radius, self.half)
+            mole = trans_adsorbate(self.molecule, 
+                                   self.box, 
+                                   self.slab, 
+                                   self.center, 
+                                   self.radius, 
+                                   self.half)
 
             for i in range(Ntop):
                 a += (Atoms([num[i]], mole[i].reshape(-1,3)))
@@ -407,6 +392,7 @@ class StartGenerator(OffspringOperation):
             not_isolated = self.check_bondlengths(a, indices=None,
                                              check_too_close=False,
                                              check_isolated=True)
+            
             valid_bondlengths = not_too_close and not_isolated
             
             if not valid_bondlengths:
@@ -414,7 +400,6 @@ class StartGenerator(OffspringOperation):
                 del a[Nslab:]
             else:
                 write('POSCAR-sample',a)
-
                 return a
                 break
 

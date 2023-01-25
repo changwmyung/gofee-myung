@@ -4,7 +4,7 @@ from ase.data import covalent_radii
 from ase.geometry import get_distances
 from ase.data import atomic_numbers, atomic_names, atomic_masses, covalent_radii
 from ase.geometry import get_distances
-
+from ase import Atoms, Atom
 from ase.visualize import view
 
 from gofee.candidates.candidate_generation import OffspringOperation
@@ -33,71 +33,6 @@ def pos_add_sphere_shell(rmin, rmax):
                             np.cos(phi)])
     return pos_add
 
-###
-def get_mol_bondlength(mol):
-    """
-    This funciton is used to check molecule's longest bond length
-    """
-    Ntop = len(mol)
-    num = np.reshape(mol,(Ntop,-1))
-    
-    r_cov = np.array([covalent_radii[n] for n in num])
-    d = np.reshape(r_cov,(1,-1))
-    b = np.sort(d)[:, ::-1]
-    mol_bl = b[:,0]+b[:,1]
-    
-    return mol_bl
-
-
-def get_bondlengths_array(Nslab,n_top,pos_init,pos_final):
-    """
-    This function is find the atom's distances that composed the molecule(stoichiometry)
-    
-    pos_init: Atoms object 
-        this mean the molecular position before mutation
-        ex) pos_init = a
-    
-    pos_final: Atoms object
-        this is molecular position after mutation
-        ex) pos_fial = 
-    """
-    #Nslab=len(slab)
-    #Ntop=len(stoichiometry)
-    Natoms=Nslab+n_top
-    pos_i=pos_init.get_positions()
-    pos_f=pos_final.get_positions()
-    dist_i=[]
-    dist_f=[]
-    for i in range(Nslab,Natoms-1):
-        dist=get_distances(pos_i[i],pos_i[i+1],cell=pos_init.get_cell(),pbc=pos_init.get_pbc())[1]
-        dist_i=np.append(dist_i,dist)
-        #print(f'dist_{i},{i+1}={dist}')
-    
-    for i in range(Nslab,Natoms-1):
-        dist=get_distances(pos_f[i],pos_f[i+1],cell=pos_final.get_cell(),pbc=pos_final.get_pbc())[1]
-        dist_f=np.append(dist_f,dist)
-        #print(f'dist_{i},{i+1}={dist}')
-    
-    return dist_i, dist_f            
-
-
-def check_mol_lengths(dist_i,dist_f,bl_limit):
-    matrix_size=len(dist_i)
-    mol_config=True
-    for i in range(matrix_size):
-        if abs(dist_i[i]-dist_f[i]) > bl_limit:
-            mol_config=False
-            return mol_config
-            break       
-            
-        else:
-            return mol_config
-            continue
-            
-        return mol_config
-###             
-###
-
 def get_bond_list(mol, bl_limit):
     """ 
     This function will find the molecule's bonds and make a bond_list
@@ -112,9 +47,7 @@ def get_bond_list(mol, bl_limit):
                 if abs(get_distances(mol.get_positions()[i],mol.get_positions()[j])[1]) <= (i_cov + j_cov + bl_limit):
                     #print(f'{i}-{j}: {mol.symbols[i]}-{mol.symbols[j]} bond')
                     bond_list.append(f'{mol.symbols[i]}{i}-{mol.symbols[j]}{j}')
-
     return bond_list
-
 
 def check_mol_config(ref_mol, mut_mol, bl_limit):
     """
@@ -125,6 +58,8 @@ def check_mol_config(ref_mol, mut_mol, bl_limit):
     """
     ref_bond_list = get_bond_list(ref_mol, bl_limit)
     mut_bond_list = get_bond_list(mut_mol, bl_limit)
+    print(f'ref bond list = {ref_bond_list}')
+    print(f'mut bond list = {mut_bond_list}')
     mol_config = True
 
     if len(ref_bond_list) == len(mut_bond_list):
@@ -138,7 +73,6 @@ def check_mol_config(ref_mol, mut_mol, bl_limit):
     else:
         mol_config = False
         return mol_config
-###
 
 
 class RattleMutation(OffspringOperation):
@@ -181,10 +115,13 @@ class RattleMutation(OffspringOperation):
         if type(n_top) is int:
             self.n_top = n_top
             self.probability = Nrattle/n_top
+            self.mol_tag = False
         else:
             self.n_top = len(n_top)
             self.molecule = n_top
             self.probability = Nrattle/len(n_top)
+            self.mol_tag = True
+        
         self.rattle_range = rattle_range
         self.bl_limit = bl_limit
 
@@ -201,21 +138,18 @@ class RattleMutation(OffspringOperation):
         pos_init = atoms.copy()
         Natoms = len(a)
         Nslab = Natoms - self.n_top
-        ###
-	   # a_atoms_indices = np.array([atom.number for atom in a])
-	   # mol = a_atoms_indices[Nslab:]
-	   # mol_bl = get_mol_bondlength(mol)
-
+        
         # Randomly select indices of atoms to permute - in random order.
         indices_to_rattle = np.arange(Nslab,Natoms)[np.random.rand(self.n_top)
                                                      < self.probability]
         indices_to_rattle = np.random.permutation(indices_to_rattle)
+        print(f'indices_to_rattle = {indices_to_rattle}')
         if len(indices_to_rattle) == 0:
             indices_to_rattle = [np.random.randint(Nslab,Natoms)]
         for i in indices_to_rattle:
             posi_0 = np.copy(a.positions[i])
-            for _ in range(1000):
-		   # while True:
+            print(f'index-{i}')
+            for j in range(1000):
                 # Perform rattle
                 pos_add = pos_add_sphere(self.rattle_range)
                 a.positions[i] += pos_add
@@ -223,38 +157,25 @@ class RattleMutation(OffspringOperation):
                 # Check position constraint
                 obey_constraint = self.check_constraints(a.positions[i])
                 # Check if rattle was valid
-                 
-				#dist_i, dist_f = get_bondlengths_array(Nslab=Nslab, n_top=self.n_top, pos_init=pos_init, pos_final=a)
-                
-                #mol_config = check_mol_lengths(dist_i,dist_f,bl_limit)
-                #from gofee.candidates import StartGenerator
-                mol_config = check_mol_config(ref_mol=self.molecule,mut_mol=a[Nslab:],bl_limit=self.bl_limit)
-
-                valid_operation = mol_config and obey_constraint
+                if self.mol_tag:
+                    mol_config = check_mol_config(ref_mol=self.molecule,
+                                                  mut_mol=a[Nslab:],
+                                                  bl_limit=self.bl_limit)
+                    print(f'mut_mol_pos = {a[Nslab:].get_positions()}')
+                    print(f'mol_config = {mol_config}, obey_constraint = {obey_constraint}')
+                    valid_operation = mol_config and obey_constraint
+                else:
+                    valid_bondlengths = self.check_bondlengths(a, indices=[i])
+                    valid_operation = valid_bondlengths and obey_constraint
+                    print('THE MOLECULAR SETTING WAS NOT DONE AND THEREFORE THE MUTATION OCCURRED THROUGH THE ORIGINAL VERSION')
 
                 if not valid_operation:
                     a.positions[i] = posi_0
+                    print(f'index-{i}_FAIL: iteration-{j}')
                 else:
+                    print(f'index-{i}_SUCCESS: iteration-{j}')
                     break
-       ##         
-	   # Perform rattle operations in sequence.
-	   # for i in indices_to_rattle:
-       #     posi_0 = np.copy(a.positions[i])
-       #     for _ in range(200):
-       #         # Perform rattle
-       #         pos_add = pos_add_sphere(self.rattle_range)
-       #         a.positions[i] += pos_add
-       #        
-       #         # Check position constraint
-       #         obey_constraint = self.check_constraints(a.positions[i])
-       #         # Check if rattle was valid
-       #         valid_bondlengths = self.check_bondlengths(a, indices=[i]) # a
-
-       #         valid_operation = valid_bondlengths and obey_constraint
-       #         if not valid_operation:
-       #             a.positions[i] = posi_0
-       #         else:
-       #             break
+        
         if valid_operation:
             return a
         else:

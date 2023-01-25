@@ -58,7 +58,9 @@ class MakeBox():
             
 
     def check_bond_length(self):
-        """This funciton is used to check and get the longest bond length """
+        """
+        This funciton is used to check and get the longest bond length 
+        """
 
         Ntop = len(self.stoichiometry)
         num = np.reshape(self.stoichiometry,(Ntop,-1))
@@ -85,7 +87,9 @@ class MakeBox():
     
     
     def specify_pos(self):
-        """This function is used to get the specified position's coordinate file if you want that."""
+        """
+        This function is used to get the specified position's coordinate file if you want that.
+        """
 
         indices=[atom.index for atom in self.slab if atom.number == self.specified_atoms]
         print(f'indices of specified_atoms = {indices}')
@@ -100,7 +104,43 @@ class MakeBox():
 
         return specify_poscar
 
-    
+
+    def spherical_parameters(self):
+        """ 
+        This function is for get the radius and spherical_center parameters
+        that used to the get_random_spherical() function of revised candidate_generation.py
+
+        This will help to obtain parameters for a spherical surface 
+        based on the center of the nanoparticles.  
+        """
+
+        specify_pos = self.specify_pos() 
+        bondlength = self.check_bond_length() 
+
+        x_max = np.max(specify_pos[:,0])
+        y_max = np.max(specify_pos[:,1])
+        z_max = np.max(specify_pos[:,2])
+
+        x_min = np.min(specify_pos[:,0])
+        y_min = np.min(specify_pos[:,1])
+        z_min = np.min(specify_pos[:,2])
+
+        radius_x = (x_max-x_min)+((2/3)*self.bl_factor*bondlength)
+        radius_y = (y_max-y_min)+((2/3)*self.bl_factor*bondlength)
+        radius_z = (z_max-z_min)+((2/3)*self.bl_factor*bondlength)
+
+        center_x = (x_max+x_min)/2
+        center_y = (y_max+y_min)/2
+        center_z = z_min
+
+        #diameter = np.min(np.array((radius_x, radius_y))) #, radius_z
+        diameter = np.max(np.array((radius_x, radius_y, radius_z)))
+        radius = diameter/2
+        spherical_center = np.array((center_x, center_y, center_z))
+
+        return radius, spherical_center
+
+
     def make_box(self):
         """ 
         If not defined the specified_atoms parameter, 
@@ -138,7 +178,7 @@ class MakeBox():
             
             if self.center_point is not None:
                 center = self.center_point
-
+                print(f'Center Point = {center}')
                 p0_x = center[0]-((1/2)*self.bl_factor*longest_bl)
                 p0_y = center[1]-((1/2)*self.bl_factor*longest_bl)
                 p0 = np.array((p0_x,p0_y,slab_z_max)) + (k*v[0][0],k*v[1][1],0)
@@ -150,15 +190,15 @@ class MakeBox():
                 
                 # Make box
                 box = [p0, v]
+                print(f'Box = {box}')
                 return box
 
             else: # if center point is not defined,
                 x_center = slab_x_max*0.5
                 y_center = slab_y_max*0.5
-
+                print(f'Center Point = {(x_center, y_center, slab_z_max)}')
                 p0_x = x_center-((1/2)*self.bl_factor*longest_bl)
                 p0_y = y_center-((1/2)*self.bl_factor*longest_bl)
-
                 p0 = np.array((p0_x,p0_y,slab_z_max)) + (k*v[0][0],k*v[1][1],0)
                 
                 # Shrink box in v[0], v[1] and v[2] directions
@@ -168,30 +208,21 @@ class MakeBox():
                 
                 # Make box
                 box = [p0, v]
+                print(f'Box = {box}')
                 return box
 
         else:
             # Parameters for box setting
-            specify_poscar = self.specify_pos()
-
-            x_max = np.max(specify_poscar[:,0])
-            y_max = np.max(specify_poscar[:,1])
-            z_max = np.max(specify_poscar[:,2])
-
-            x_min = np.min(specify_poscar[:,0])
-            y_min = np.min(specify_poscar[:,1])
-            z_min = np.min(specify_poscar[:,2])
+            radius, spherical_center = self.spherical_parameters()
+            length = 2*radius + 3*longest_bl
 
             # Set size of box
-            v[0][0] = x_max-x_min+((2/3)*self.bl_factor*longest_bl)
-            v[1][1] = y_max-y_min+((2/3)*self.bl_factor*longest_bl)
+            v[0][0] = length
+            v[1][1] = length
             # Set height of box
-            v[2][2] = z_max-z_min+longest_bl
-            
-            x = x_min/3
-            y = y_min/3
-            
-            p0 = np.array((x,y,z_min)) + (k*v[0][0],k*v[1][1],0)
+            v[2][2] = length/2
+            print(f'Center Point = {spherical_center}')                       
+            p0 = spherical_center-(length/2,length/2,0) + (k*v[0][0],k*v[1][1],0)
 
             # Shrink box in v[0], v[1] and v[2] directions
             v[0][0] *= (1-2*k)
@@ -200,47 +231,8 @@ class MakeBox():
             
             # Make box
             box = [p0, v]
+            print(f'Box = {box}')
             return box
 
-        print('v: ',v)
-        print('box: ',box)
-        print(f'center_point = {self.center_point}')
-
-
-
-    def spherical_parameters(self):
-        """ 
-        This function is for get the radius and spherical_center parameters
-        that used to the get_random_spherical() function of revised candidate_generation.py
-
-        This will help to obtain parameters for a spherical surface 
-        based on the center of the nanoparticles.  
-        """
-
-        specify_pos = self.specify_pos() 
-        bondlength = self.check_bond_length() 
-
-        x_max = np.max(specify_pos[:,0])
-        y_max = np.max(specify_pos[:,1])
-        z_max = np.max(specify_pos[:,2])
-
-        x_min = np.min(specify_pos[:,0])
-        y_min = np.min(specify_pos[:,1])
-        z_min = np.min(specify_pos[:,2])
-
-        radius_x = (x_max-x_min)+2*bondlength
-        radius_y = (y_max-y_min)+2*bondlength
-        radius_z = (z_max-z_min)+2*bondlength
-
-        center_x = (x_max+x_min)/2
-        center_y = (y_max+y_min)/2
-        center_z = z_min
-
-        #diameter = np.min(np.array((radius_x, radius_y))) #, radius_z
-        diameter = np.max(np.array((radius_x, radius_y, radius_z)))
-        radius = diameter/2
-        spherical_center = np.array((center_x, center_y, center_z))
-
-        return radius, spherical_center
         
 

@@ -107,7 +107,7 @@ class GOFEE():
 
     restart: str
         Filename for restart file.
-    """###
+    """
     def __init__(self, structures=None,
                  calc=None,
                  gpr=None,
@@ -127,7 +127,7 @@ class GOFEE():
                  restart='restart.pickl',
                  bfgs_traj=None,
                  candidates_list=False):
-		###
+
         if structures is None:
             assert startgenerator is not None
             self.structures = None
@@ -187,11 +187,10 @@ class GOFEE():
         self.min_certainty = min_certainty
         self.position_constraint = position_constraint
         self.restart = restart
-        ###
+        
         self.bfgs_traj = bfgs_traj
         self.candidates_list = candidates_list
-        ###
-
+        
         # Add position-constraint to candidate-generator
         self.candidate_generator.set_constraints(position_constraint)
 

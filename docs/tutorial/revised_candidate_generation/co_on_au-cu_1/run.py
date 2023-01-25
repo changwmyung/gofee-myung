@@ -46,11 +46,11 @@ slab.set_constraint(c)
 stoichiometry = [6]+[8]
 
 box_1 = MakeBox(stoichiometry=stoichiometry,
-               slab=slab,
-               specified_atoms=79,
-               center_point=None,
-               bl_factor=None,
-               shirinkage=None)
+                slab=slab,
+                specified_atoms=79,
+                center_point=None,
+                bl_factor=None,
+                shirinkage=None)
 box = box_1.make_box()
 print(f'box={box}')
 

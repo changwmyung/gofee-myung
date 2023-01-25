@@ -46,11 +46,11 @@ slab.set_constraint(c)
 stoichiometry = [6]+[8]
 
 box_1 = MakeBox(stoichiometry=stoichiometry,
-               slab=slab,
-               specified_atoms=79,
-               center_point=None,
-               bl_factor=None,
-               shirinkage=None)
+                slab=slab,
+                specified_atoms=79,
+                center_point=None,
+                bl_factor=None,
+                shirinkage=None)
 box = box_1.make_box()
 print(f'box={box}')
 
@@ -105,7 +105,8 @@ search = GOFEE(calc=calc,
                max_steps=150,
                population_size=5,
                position_constraint=box_constraint,
-               bfgs_traj='bfgs.traj')
+               bfgs_traj='bfgs.traj',
+			   candidates_list=True)
 """ 
 If you set "bfgs_traj='bfgs.traj", then the 'bfgs.traj' and 'bfgs_tot.traj' files will be generated,
 but "bfgs_traj=None" or not set this parameter, then the bfgs related trajectory files will not be generated. 

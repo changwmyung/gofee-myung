@@ -93,8 +93,8 @@ box_constraint = OperationConstraint(box=box)
 
 # initialize rattle-mutation
 #n_to_optimize = len(stoichiometry)
-n_to_optimize = molecule  # If you want molecule's rattle mutation, you have to set like this
-rattle = RattleMutation(n_to_optimize, Nrattle=3, rattle_range=4, bl_limit=0.3)
+n_to_optimize = molecule  # if you want molecule's rattle mutation, you have to set like this
+rattle = RattleMutation(n_to_optimize, Nrattle=3, rattle_range=1, bl_limit=0.3)
 
 candidate_generator = CandidateGenerator([0.2, 0.8], [sg, rattle])
 
@@ -109,6 +109,6 @@ search = GOFEE(calc=calc,
                population_size=5,
                position_constraint=box_constraint,
                bfgs_traj='bfgs.traj',
-	       candidates_list=True)
+			   candidates_list=True)
 search.run()
 
