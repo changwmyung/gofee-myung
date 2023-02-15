@@ -1,0 +1,14 @@
+This example is use the filter relaxed candidates method
+that impose constraints as molecular configuration to relaxed candidates.
+
+Using this method,
+you can get only optimized structures that maintaining the molecular configuration.
+
+For using this method,
+you have to set the parameter to GOFEE's object like below
+
+ex)	search = GOFEE(...,
+			       impose_mol_constraint=molecule)
+	search.run()
+
+where the molecule is Atoms object.

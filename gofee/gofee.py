@@ -19,6 +19,7 @@ from gofee.bfgslinesearch_constrained import relax
 
 from gofee.candidates import CandidateGenerator
 from gofee.candidates import RattleMutation
+from gofee.candidates.basic_mutations import get_bond_list, check_mol_config
 
 from mpi4py import MPI
 world = MPI.COMM_WORLD
@@ -126,7 +127,8 @@ class GOFEE():
                  logfile='search.log',
                  restart='restart.pickl',
                  bfgs_traj=None,
-                 candidates_list=False):
+                 candidates_list=False,
+                 impose_mol_constraint=None):
 
         if structures is None:
             assert startgenerator is not None
@@ -190,6 +192,7 @@ class GOFEE():
         
         self.bfgs_traj = bfgs_traj
         self.candidates_list = candidates_list
+        self.impose_mol_constraint = impose_mol_constraint
         
         # Add position-constraint to candidate-generator
         self.candidate_generator.set_constraints(position_constraint)
@@ -383,6 +386,28 @@ class GOFEE():
         candidates = parallel_function_eval(self.comm, func1)
         return candidates
 
+    def filter_relaxed_candidates(self, relaxed_candidates):
+        """
+        Method to filter out relaxed candidates;
+        impose constraints as molecular configuration to relaxed candidates
+        """
+        filtered_candidates = relaxed_candidates
+        num = 0
+        for j in range(len(relaxed_candidates)):
+            candidate = filtered_candidates[j-num]
+            Nslab = len(candidate)-len(self.impose_mol_constraint)
+            mol_config = check_mol_config(ref_mol=self.impose_mol_constraint,
+                                          mut_mol=candidate[Nslab:],
+                                          bl_limit=0.2)
+            if not mol_config: 
+                # if False; if the molecular configuration was braoken
+                del filtered_candidates[j-num]
+                num += 1         
+            else: 
+                # if True; if the molecular configuration was maintained
+                continue   
+        return filtered_candidates     
+
     def relax_candidates_with_surrogate(self, candidates):
         """ Method to relax new candidates using the
         surrogate-model.
@@ -396,6 +421,8 @@ class GOFEE():
         relaxed_candidates = parallel_function_eval(self.comm, func2)
         relaxed_candidates = self.certainty_filter(relaxed_candidates)
         relaxed_candidates = self.population.pop_MLrelaxed + relaxed_candidates
+        if self.impose_mol_constraint is not None:
+            relaxed_candidates = self.filter_relaxed_candidates(relaxed_candidates)
         
         return relaxed_candidates
 
