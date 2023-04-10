@@ -125,6 +125,7 @@ class GOFEE():
                  position_constraint=None,
                  trajectory='structures.traj',
                  logfile='search.log',
+                 test_log=False,
                  restart='restart.pickl',
                  bfgs_traj=None,
                  candidates_list=False,
@@ -193,6 +194,7 @@ class GOFEE():
         self.bfgs_traj = bfgs_traj
         self.candidates_list = candidates_list
         self.impose_mol_constraint = impose_mol_constraint
+        self.population_size = population_size
         
         # Add position-constraint to candidate-generator
         self.candidate_generator.set_constraints(position_constraint)
@@ -211,7 +213,10 @@ class GOFEE():
                 logfile = open(logfile, "a")
         self.logfile = logfile
         self.log_msg = ''
-
+        ###
+        self.test_log = test_log
+        
+        ###
         if restart is None or not path.exists(restart):
             self.initialize()
 
@@ -352,6 +357,109 @@ class GOFEE():
             self.log()
             self.steps += 1
             
+    def run_new(self):
+        """ Method to run the search.
+        """
+        if self.steps == 0: 
+            self.evaluate_initial_structures()
+		   # if len(self.population.pop) < self.population_size:
+           #     print('\nINITIAL POPULATION POOL SIZE({len(self.population.pop})) IS SMALLER THAN POPULATION SIZE({self.population_size})\n')
+           #     while len(self.population.pop) < self.population_size:
+           #         self.Ninit *= 1.5
+           #         self.structures = None
+           #         self.get_initial_structures()
+           #         self.evaluate_initial_structures()
+           #         print(f'Ninit = {self.Ninit}\nPopulation pool size = {len(self.population.pop)}\n')
+
+        while self.steps < self.max_steps:
+            self.log_msg += (f"\n##### STEPS: {self.steps} #####\n\n")
+            test_log_msg = (f"\n##### STEPS: {self.steps} #####\n")
+            t0 = time()
+            self.train_surrogate()
+            t1 = time()
+            self.update_population()
+            t2 = time()
+            unrelaxed_candidates = self.generate_new_candidates()
+            if self.candidates_list:
+                unrelaxed_traj = Trajectory(filename='unrelaxed_candidates.traj', mode='a')
+                for i in range(len(unrelaxed_candidates)):
+                        unrelaxed_traj.write(unrelaxed_candidates[i])
+                unrelaxed_traj.close()
+            t3 = time()
+            relaxed_candidates = self.relax_candidates_with_surrogate(unrelaxed_candidates)
+            if self.candidates_list:
+                relaxed_traj = Trajectory(filename='relaxed_candidates.traj', mode='a')
+                for i in range(len(relaxed_candidates)):
+                        relaxed_traj.write(relaxed_candidates[i])
+                relaxed_traj.close()
+            t4 = time()
+            kappa = self.kappa
+            pop_retry = True
+            while pop_retry:
+                a_add = []
+                for _ in range(5):
+                    try:
+                        anew = self.select_with_acquisition(relaxed_candidates, kappa)
+                        anew = self.evaluate(anew)
+                        a_add.append(anew)
+                        if self.dualpoint:
+                            adp = self.get_dualpoint(anew)
+                            adp = self.evaluate(adp)
+                            a_add.append(adp)
+                        break
+                    except Exception as err:
+                        kappa /=2
+                        if self.master:
+                            traceback.print_exc(file=sys.stderr)
+                self.gpr.memory.save_data(a_add)    
+                test_log_msg += (f'\nbefore population.add:\n{array_to_string([a.get_potential_energy() for a in self.population.pop])}')
+                index_lowest = np.argmin([a.get_potential_energy() for a in a_add])
+                self.population.add([a_add[index_lowest]])
+                test_log_msg += (f'\nafter population.add:\n{array_to_string([a.get_potential_energy() for a in self.population.pop])}')
+                if len(self.population.pop) < self.population_size:
+                    test_log_msg += (f'\nPOPULATION POOL SIZE({len(self.population.pop)}) IS SMALLER THAN THE POPULATION SIZE({self.population_size})\n')
+                    unrelaxed_candidates = self.generate_new_candidates()
+                    if self.candidates_list:
+                        unrelaxed_traj = Trajectory(filename='unrelaxed_candidates.traj', mode='a')
+                        for i in range(len(unrelaxed_candidates)):
+                                unrelaxed_traj.write(unrelaxed_candidates[i])
+                        unrelaxed_traj.close()
+                    relaxed_candidates = self.relax_candidates_with_surrogate(unrelaxed_candidates)
+                    if self.candidates_list:
+                        relaxed_traj = Trajectory(filename='relaxed_candidates.traj', mode='a')
+                        for i in range(len(relaxed_candidates)):
+                                relaxed_traj.write(relaxed_candidates[i])
+                        relaxed_traj.close()     
+                    kappa *= 1.2
+                    test_log_msg += (f'\nThe kappa was changed {self.kappa} to {kappa}')
+                else: 
+                    pop_retry = False
+                    test_log_msg += (f'\nPOPULATION POOL SIZE({len(self.population.pop)}) IS EQUAL TO THE POPULATION SIZE({self.population_size}) AT THE {self.steps}\n')
+
+                if self.test_log:
+                    test_log = open('test.log', 'a')
+                    test_log.write(test_log_msg)
+                    test_log.close()
+                    test_log_msg = ''
+
+            # log timing
+            self.log_msg += "Timing:\n"
+            self.log_msg += f"{'Training':12}{'Relax pop.':12}{'Make cands.':15}{'Relax cands.':16}{'Evaluate':12}\n"
+            self.log_msg += f"{t1-t0:<12.2e}{t2-t1:<12.2e}{t3-t2:<15.2e}{t4-t3:<16.2e}{time()-t4:<12.2e}\n\n"
+
+            # Save search state
+            self.save_state()
+            
+            self.log_msg += (f"Prediction:\nenergy = {anew.info['key_value_pairs']['Epred']:.5f}eV,  energy_std = {anew.info['key_value_pairs']['Epred_std']:.5f}eV\n")
+            self.log_msg += (f"E_true:\n{array_to_string([a.get_potential_energy() for a in a_add], unit='eV')}\n\n")
+            #self.log_msg += (f"E_true: {[a.get_potential_energy() for a in a_add]}\n")
+            self.log_msg += (f"Energy of population:\n{array_to_string([a.get_potential_energy() for a in self.population.pop], unit='eV')}\n")
+            self.log_msg += (f"Max force of ML-relaxed population:\n{array_to_string([(a.get_forces()**2).sum(axis=1).max()**0.5 for a in self.population.pop_MLrelaxed], unit='eV/A')}\n")
+            
+            #self.test_log()  
+            self.log()
+            self.steps += 1
+            
     def get_dualpoint(self, a, lmax=0.10, Fmax_flat=5):
         """Returns dual-point structure, i.e. the original structure
         perturbed slightly along the forces.
@@ -391,7 +499,7 @@ class GOFEE():
         Method to filter out relaxed candidates;
         impose constraints as molecular configuration to relaxed candidates
         """
-        filtered_candidates = relaxed_candidates
+        filtered_candidates = relaxed_candidates.copy()
         num = 0
         for j in range(len(relaxed_candidates)):
             candidate = filtered_candidates[j-num]
@@ -591,5 +699,14 @@ class GOFEE():
             self.logfile.flush()
         self.log_msg = ''
 
+    def test_log(self):
+        if self.test_log is not None:
+            if self.steps == 0:
+                test_msg = "GOFEE"
+                self.test_log.write(test_msg)
+
+            self.test_log.write(self.test_log_msg)
+            self.test_log.flush()
+        self.test_log_msg = ''
 
 
