@@ -30,6 +30,13 @@ from os import path
 
 from time import time
 
+
+def traj(filename,candidates):
+    traj = Trajectory(filename=filename, mode='a')
+    for i in range(len(candidates)):
+        traj.write(candidates[i])
+    traj.close()
+
 class GOFEE():
     """
     GOFEE global structure search method.
@@ -306,17 +313,11 @@ class GOFEE():
             t2 = time()
             unrelaxed_candidates = self.generate_new_candidates()
             if self.candidates_list:
-                unrelaxed_traj = Trajectory(filename='unrelaxed_candidates.traj', mode='a')
-                for i in range(len(unrelaxed_candidates)):
-                        unrelaxed_traj.write(unrelaxed_candidates[i])
-                unrelaxed_traj.close()
+                traj(filename='unrelaxed_candidates.traj',candidates=unrelaxed_candidates)
             t3 = time()
             relaxed_candidates = self.relax_candidates_with_surrogate(unrelaxed_candidates)
             if self.candidates_list:
-                relaxed_traj = Trajectory(filename='relaxed_candidates.traj', mode='a')
-                for i in range(len(relaxed_candidates)):
-                        relaxed_traj.write(relaxed_candidates[i])
-                relaxed_traj.close()
+                traj(filename='relaxed_candidates.traj',candidates=relaxed_candidates)
             t4 = time()
             kappa = self.kappa
             a_add = []
@@ -362,14 +363,6 @@ class GOFEE():
         """
         if self.steps == 0: 
             self.evaluate_initial_structures()
-		   # if len(self.population.pop) < self.population_size:
-           #     print('\nINITIAL POPULATION POOL SIZE({len(self.population.pop})) IS SMALLER THAN POPULATION SIZE({self.population_size})\n')
-           #     while len(self.population.pop) < self.population_size:
-           #         self.Ninit *= 1.5
-           #         self.structures = None
-           #         self.get_initial_structures()
-           #         self.evaluate_initial_structures()
-           #         print(f'Ninit = {self.Ninit}\nPopulation pool size = {len(self.population.pop)}\n')
 
         while self.steps < self.max_steps:
             self.log_msg += (f"\n##### STEPS: {self.steps} #####\n\n")
@@ -381,17 +374,11 @@ class GOFEE():
             t2 = time()
             unrelaxed_candidates = self.generate_new_candidates()
             if self.candidates_list:
-                unrelaxed_traj = Trajectory(filename='unrelaxed_candidates.traj', mode='a')
-                for i in range(len(unrelaxed_candidates)):
-                        unrelaxed_traj.write(unrelaxed_candidates[i])
-                unrelaxed_traj.close()
+                traj(filename='unrelaxed_candidates.traj',candidates=unrelaxed_candidates)
             t3 = time()
             relaxed_candidates = self.relax_candidates_with_surrogate(unrelaxed_candidates)
             if self.candidates_list:
-                relaxed_traj = Trajectory(filename='relaxed_candidates.traj', mode='a')
-                for i in range(len(relaxed_candidates)):
-                        relaxed_traj.write(relaxed_candidates[i])
-                relaxed_traj.close()
+                traj(filename='relaxed_candidates.traj',candidates=relaxed_candidates)
             t4 = time()
             kappa = self.kappa
             pop_retry = True
@@ -420,21 +407,15 @@ class GOFEE():
                     test_log_msg += (f'\nPOPULATION POOL SIZE({len(self.population.pop)}) IS SMALLER THAN THE POPULATION SIZE({self.population_size})\n')
                     unrelaxed_candidates = self.generate_new_candidates()
                     if self.candidates_list:
-                        unrelaxed_traj = Trajectory(filename='unrelaxed_candidates.traj', mode='a')
-                        for i in range(len(unrelaxed_candidates)):
-                                unrelaxed_traj.write(unrelaxed_candidates[i])
-                        unrelaxed_traj.close()
+                        traj(filename='unrelaxed_candidates.traj',candidates=unrelaxed_candidates)
                     relaxed_candidates = self.relax_candidates_with_surrogate(unrelaxed_candidates)
                     if self.candidates_list:
-                        relaxed_traj = Trajectory(filename='relaxed_candidates.traj', mode='a')
-                        for i in range(len(relaxed_candidates)):
-                                relaxed_traj.write(relaxed_candidates[i])
-                        relaxed_traj.close()     
+                        traj(filename='relaxed_candidates.traj',candidates=relaxed_candidates)
                     kappa *= 1.2
                     test_log_msg += (f'\nThe kappa was changed {self.kappa} to {kappa}')
                 else: 
                     pop_retry = False
-                    test_log_msg += (f'\nPOPULATION POOL SIZE({len(self.population.pop)}) IS EQUAL TO THE POPULATION SIZE({self.population_size}) AT THE {self.steps}\n')
+                    test_log_msg += (f'\nPOPULATION POOL SIZE({len(self.population.pop)}) IS EQUAL TO THE POPULATION SIZE({self.population_size})\n')
 
                 if self.test_log:
                     test_log = open('test.log', 'a')
