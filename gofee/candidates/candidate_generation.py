@@ -211,52 +211,96 @@ def random_pos(box):
     return pos
 
 
-def rotate_adsorbate(molecule):
+#def rotate_adsorbate(molecule):
+#
+#    mol=[]
+#    mol = molecule
+#    cm = mol.get_center_of_mass()
+#    angles = 360.*np.random.random(3)
+#    mol.euler_rotate(angles[0],angles[1],angles[2],cm)
+#    return mol
+#
+#
+#def trans_adsorbate(molecule,box,slab,center,radius,half):
+#
+#    mol = []
+#    trans_pos = []
+#    mol = rotate_adsorbate(molecule)
+#    trans_mol_slab = []
+#    trans_mol_slab = slab.copy()
+#    
+#    if radius is None:
+#        trans_matrix = np.random.random(3)*(np.array(box[1])*np.identity(3))    
+#        trans_pos = np.array([trans_matrix[0][0],trans_matrix[1][1], trans_matrix[2][2]])
+#        mol_t= mol.get_positions()+trans_pos+box[0]
+#    else:     
+#        trans_pos = (np.array(get_random_spherical(radius, half)))
+#        mol_t= mol.get_positions()+trans_pos+center
+#    return mol_t
+#
+#
+#def get_random_spherical(radius, half):
+#
+#    coordinate = []
+#    theta = np.pi*np.random.random(1) # 0 < theta < 180
+#    phi = 2*np.pi*np.random.random(1) # 0 < phi < 360
+#    rho = radius*np.sin(theta)
+#    
+#    x = rho*np.cos(phi)
+#    y = rho*np.sin(phi)
+#
+#    if half:
+#        z = abs(radius*np.cos(theta))
+#    else :
+#        z = radius*np.cos(theta)      
+#    coordinate = np.array([x,y,z]).reshape(1,3)
+#    
+#    return coordinate
 
-    mol=[]
-    mol = molecule
-    cm = mol.get_center_of_mass()
+def random_rotate_adsorbate(adsorbate):
+    ads = adsorbate.copy()
+    cm = ads.get_center_of_mass()
     angles = 360.*np.random.random(3)
-    mol.euler_rotate(angles[0],angles[1],angles[2],cm)
-    return mol
+    ads.euler_rotate(angles[0],angles[1],angles[2],cm)
+    return ads
 
+def random_trans_adsorbate(box, adsorbate, spherical=None):
+    """
+    spherical; dictionary
+    ex) spherical = {'center': [x, y, z],
+                     'radius': float,
+                     'half': bool}
+    """
+    rotated_adsorbate = random_rotate_adsorbate(adsorbate)
+    if spherical == None:
+        trans_pos = random_pos(box)
+        transed_adsorbate = rotated_adsorbate.get_positions() + trans_pos
+    else:
+        #trans_pos = (np.array(get_random_spherical(radius, half)))
+        trans_pos = random_spherical_coordinate(spherical)
+        transed_adsorbate = rotated_adsorbate.get_positions() + trans_pos
+    return transed_adsorbate
 
-def trans_adsorbate(molecule,box,slab,center,radius,half):
-
-    mol = []
-    trans_pos = []
-    mol = rotate_adsorbate(molecule)
-    trans_mol_slab = []
-    trans_mol_slab = slab.copy()
-    
-    if radius is None:
-        trans_matrix = np.random.random(3)*(np.array(box[1])*np.identity(3))    
-        trans_pos = np.array([trans_matrix[0][0],trans_matrix[1][1], trans_matrix[2][2]])
-        mol_t= mol.get_positions()+trans_pos+box[0]
-    else:     
-        trans_pos = (np.array(get_random_spherical(radius, half)))
-        mol_t= mol.get_positions()+trans_pos+center
-    return mol_t
-
-
-def get_random_spherical(radius, half):
-
-    coordinate = []
-    theta = np.pi*np.random.random(1) # 0 < theta < 180
-    phi = 2*np.pi*np.random.random(1) # 0 < phi < 360
-    rho = radius*np.sin(theta)
-    
-    x = rho*np.cos(phi)
-    y = rho*np.sin(phi)
-
-    if half:
-        z = abs(radius*np.cos(theta))
+def random_spherical_coordinate(spherical):
+    #center = spherical['center']
+    theta = np.pi * np.random.random() # 0 < theta < 180
+    phi = 2 * np.pi * np.random.random() # 0 < phi < 360
+    rho = spherical['radius'] * np.sin(theta)
+    x = rho * np.cos(phi)
+    y = rho * np.sin(phi)
+    if spherical['half']:
+        z = abs(spherical['radius'] * np.cos(theta))
     else :
-        z = radius*np.cos(theta)      
-    coordinate = np.array([x,y,z]).reshape(1,3)
-    
+        z = spherical['radius'] * np.cos(theta)
+    coordinate = np.array([x,y,z]).reshape(1,3) + spherical['center']
     return coordinate
 
+def get_bond_length(atom1, atom2):
+    radius_1 = covalent_radii[atom1.number]
+    radius_2 = covalent_radii[atom2.number]
+    bond_length = radius_1 + radius_2 
+    #print(f'--bond length of {atom1.symbol}-{atom2.symbol}: {bond_length}')
+    return bond_length
 
 
 class StartGenerator(OffspringOperation):
@@ -300,6 +344,8 @@ class StartGenerator(OffspringOperation):
                  cluster=False, molecule=None,
                  center=None, radius=None, half=True,
                  description='StartGenerator',
+                 blmax=0.3, blmin=0.3, aggregate=False, 
+                 spherical=None,
                  *args, **kwargs):
 
         OffspringOperation.__init__(self, *args, **kwargs)
@@ -312,6 +358,10 @@ class StartGenerator(OffspringOperation):
         self.center = center
         self.radius = radius
         self.half = half
+        self.blmin = blmin
+        self.blmax = blmax
+        self.aggregate = aggregate
+        self.spherical = spherical
 
     def operation(self, parents=None):
         if self.molecule is None:
@@ -366,42 +416,79 @@ class StartGenerator(OffspringOperation):
         else:
             return a
                 
+#    def make_mol_structure(self):
+#        
+#        Nslab = len(self.slab)
+#        Ntop = len(self.stoichiometry)
+#        num = np.array(self.stoichiometry)
+# 
+#        while True:
+#            a = []
+#            a = self.slab.copy()
+#            mole = trans_adsorbate(self.molecule, 
+#                                   self.box, 
+#                                   self.slab, 
+#                                   self.center, 
+#                                   self.radius, 
+#                                   self.half)
+#
+#            for i in range(Ntop):
+#                a += (Atoms([num[i]], mole[i].reshape(-1,3)))
+#
+#            not_too_close = self.check_bondlengths(a, indices=None,
+#                                              check_too_close=True,
+#                                              check_isolated=False)
+#
+#            not_isolated = self.check_bondlengths(a, indices=None,
+#                                             check_too_close=False,
+#                                             check_isolated=True)
+#            
+#            valid_bondlengths = not_too_close and not_isolated
+#            
+#            if not valid_bondlengths:
+#                print('not valid bondlength')
+#                write('POSCAR-sample_failed',a)
+#                del a[Nslab:]
+#            else:
+#                write('POSCAR-sample',a)
+#                return a
+#                break
+
     def make_mol_structure(self):
-        
-        Nslab = len(self.slab)
-        Ntop = len(self.stoichiometry)
-        num = np.array(self.stoichiometry)
- 
-        while True:
-            a = []
-            a = self.slab.copy()
-            mole = trans_adsorbate(self.molecule, 
-                                   self.box, 
-                                   self.slab, 
-                                   self.center, 
-                                   self.radius, 
-                                   self.half)
-
-            for i in range(Ntop):
-                a += (Atoms([num[i]], mole[i].reshape(-1,3)))
-
-            not_too_close = self.check_bondlengths(a, indices=None,
-                                              check_too_close=True,
-                                              check_isolated=False)
-
-            not_isolated = self.check_bondlengths(a, indices=None,
-                                             check_too_close=False,
-                                             check_isolated=True)
-            
-            valid_bondlengths = not_too_close and not_isolated
-            
-            if not valid_bondlengths:
-                write('POSCAR-sample_failed',a)
-                del a[Nslab:]
-            else:
-                write('POSCAR-sample',a)
-                return a
-                break
+        stack = self.slab.copy()
+        adsorbed = False
+        while not adsorbed:
+            added_pos = random_trans_adsorbate(self.box, self.molecule, self.spherical)
+            stack += Atoms(f'{self.molecule.symbols}', positions = added_pos)
+            stack_pos = stack.get_positions().copy()
+            N_ads = len(self.molecule)
+            for i in range(N_ads):
+                bond_length_list = [get_bond_length(stack[-N_ads+i], stack[j]) for j in range(len(stack)-N_ads)]
+                                   # between stacked atom of molecule and all of slab's atoms
+                distance_list = [get_distances(stack_pos[-N_ads+i], stack_pos[j],
+                                               cell = stack.get_cell(),
+                                               pbc = stack.get_pbc())[1][0, 0] for j in range(len(stack)-N_ads)]
+                                   # between stacked atom of molecule and all of slab's atoms considering pbc
+                if all(distance_list[j] >= (bond_length_list[j]-self.blmin) for j in range(len(distance_list))):
+                    if any(distance_list[j] <= (bond_length_list[j]+self.blmax) for j in range(len(distance_list))):
+                    # If the stacked atom of molecule is neither too close nor too far from the others,
+                        adsorbed = True
+                        for k in range(N_ads):
+                            # Check the others whether too close.
+                            bond_length_list = [get_bond_length(stack[-N_ads+k], stack[j]) for j in range(len(stack)-N_ads)]
+                            distance_list = [get_distances(stack_pos[-N_ads+k], stack_pos[j],
+                                                           cell = stack.get_cell(),
+                                                           pbc = stack.get_pbc())[1][0, 0] for j in range(len(stack)-N_ads)]
+                            if any(distance_list[j] < (bond_length_list[j]-self.blmin) for j in range(len(distance_list))):
+                                adsorbed = False
+                        break
+                    else:
+                        adsorbed = False
+                else:
+                    adsorbed = False
+            if not adsorbed:
+                del stack[-N_ads:]
+        return stack
 
     
 if __name__ == '__main__':
