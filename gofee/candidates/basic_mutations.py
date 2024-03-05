@@ -167,7 +167,7 @@ class RattleMutation(OffspringOperation):
                 else:
                     valid_bondlengths = self.check_bondlengths(a, indices=[i])
                     valid_operation = valid_bondlengths and obey_constraint
-                    #print('THE MOLECULAR SETTING WAS NOT DONE AND THEREFORE THE MUTATION OCCURRED THROUGH THE ORIGINAL VERSION')
+                    print('THE MOLECULAR SETTING WAS NOT DONE AND THEREFORE THE MUTATION OCCURRED THROUGH THE ORIGINAL VERSION')
 
                 if not valid_operation:
                     a.positions[i] = posi_0

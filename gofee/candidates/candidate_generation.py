@@ -128,6 +128,8 @@ class OffspringOperation(ABC):
             return valid
         else:
             return True
+        
+
 
 class CandidateGenerator():
     """Class to produce new candidates by applying one of the 
@@ -210,53 +212,6 @@ def random_pos(box):
         pos += vspan[i] * r[0, i]
     return pos
 
-
-#def rotate_adsorbate(molecule):
-#
-#    mol=[]
-#    mol = molecule
-#    cm = mol.get_center_of_mass()
-#    angles = 360.*np.random.random(3)
-#    mol.euler_rotate(angles[0],angles[1],angles[2],cm)
-#    return mol
-#
-#
-#def trans_adsorbate(molecule,box,slab,center,radius,half):
-#
-#    mol = []
-#    trans_pos = []
-#    mol = rotate_adsorbate(molecule)
-#    trans_mol_slab = []
-#    trans_mol_slab = slab.copy()
-#    
-#    if radius is None:
-#        trans_matrix = np.random.random(3)*(np.array(box[1])*np.identity(3))    
-#        trans_pos = np.array([trans_matrix[0][0],trans_matrix[1][1], trans_matrix[2][2]])
-#        mol_t= mol.get_positions()+trans_pos+box[0]
-#    else:     
-#        trans_pos = (np.array(get_random_spherical(radius, half)))
-#        mol_t= mol.get_positions()+trans_pos+center
-#    return mol_t
-#
-#
-#def get_random_spherical(radius, half):
-#
-#    coordinate = []
-#    theta = np.pi*np.random.random(1) # 0 < theta < 180
-#    phi = 2*np.pi*np.random.random(1) # 0 < phi < 360
-#    rho = radius*np.sin(theta)
-#    
-#    x = rho*np.cos(phi)
-#    y = rho*np.sin(phi)
-#
-#    if half:
-#        z = abs(radius*np.cos(theta))
-#    else :
-#        z = radius*np.cos(theta)      
-#    coordinate = np.array([x,y,z]).reshape(1,3)
-#    
-#    return coordinate
-
 def random_rotate_adsorbate(adsorbate):
     ads = adsorbate.copy()
     cm = ads.get_center_of_mass()
@@ -299,7 +254,6 @@ def get_bond_length(atom1, atom2):
     radius_1 = covalent_radii[atom1.number]
     radius_2 = covalent_radii[atom2.number]
     bond_length = radius_1 + radius_2 
-    #print(f'--bond length of {atom1.symbol}-{atom2.symbol}: {bond_length}')
     return bond_length
 
 
@@ -344,7 +298,7 @@ class StartGenerator(OffspringOperation):
                  cluster=False, molecule=None,
                  center=None, radius=None, half=True,
                  description='StartGenerator',
-                 blmax=0.3, blmin=0.3, aggregate=False, 
+                 bl_max=0.3, bl_min=0.3, aggregate=False, 
                  spherical=None,
                  *args, **kwargs):
 
@@ -358,8 +312,8 @@ class StartGenerator(OffspringOperation):
         self.center = center
         self.radius = radius
         self.half = half
-        self.blmin = blmin
-        self.blmax = blmax
+        self.bl_min = bl_min
+        self.bl_max = bl_max
         self.aggregate = aggregate
         self.spherical = spherical
 
@@ -415,45 +369,9 @@ class StartGenerator(OffspringOperation):
             raise RuntimeError('StartGenerator: No valid structure was produced in 1000 trials.')
         else:
             return a
-                
-#    def make_mol_structure(self):
-#        
-#        Nslab = len(self.slab)
-#        Ntop = len(self.stoichiometry)
-#        num = np.array(self.stoichiometry)
-# 
-#        while True:
-#            a = []
-#            a = self.slab.copy()
-#            mole = trans_adsorbate(self.molecule, 
-#                                   self.box, 
-#                                   self.slab, 
-#                                   self.center, 
-#                                   self.radius, 
-#                                   self.half)
-#
-#            for i in range(Ntop):
-#                a += (Atoms([num[i]], mole[i].reshape(-1,3)))
-#
-#            not_too_close = self.check_bondlengths(a, indices=None,
-#                                              check_too_close=True,
-#                                              check_isolated=False)
-#
-#            not_isolated = self.check_bondlengths(a, indices=None,
-#                                             check_too_close=False,
-#                                             check_isolated=True)
-#            
-#            valid_bondlengths = not_too_close and not_isolated
-#            
-#            if not valid_bondlengths:
-#                print('not valid bondlength')
-#                write('POSCAR-sample_failed',a)
-#                del a[Nslab:]
-#            else:
-#                write('POSCAR-sample',a)
-#                return a
-#                break
 
+
+                
     def make_mol_structure(self):
         stack = self.slab.copy()
         adsorbed = False
@@ -469,8 +387,8 @@ class StartGenerator(OffspringOperation):
                                                cell = stack.get_cell(),
                                                pbc = stack.get_pbc())[1][0, 0] for j in range(len(stack)-N_ads)]
                                    # between stacked atom of molecule and all of slab's atoms considering pbc
-                if all(distance_list[j] >= (bond_length_list[j]-self.blmin) for j in range(len(distance_list))):
-                    if any(distance_list[j] <= (bond_length_list[j]+self.blmax) for j in range(len(distance_list))):
+                if all(distance_list[j] >= (bond_length_list[j]-self.bl_min) for j in range(len(distance_list))):
+                    if any(distance_list[j] <= (bond_length_list[j]+self.bl_max) for j in range(len(distance_list))):
                     # If the stacked atom of molecule is neither too close nor too far from the others,
                         adsorbed = True
                         for k in range(N_ads):
@@ -479,7 +397,7 @@ class StartGenerator(OffspringOperation):
                             distance_list = [get_distances(stack_pos[-N_ads+k], stack_pos[j],
                                                            cell = stack.get_cell(),
                                                            pbc = stack.get_pbc())[1][0, 0] for j in range(len(stack)-N_ads)]
-                            if any(distance_list[j] < (bond_length_list[j]-self.blmin) for j in range(len(distance_list))):
+                            if any(distance_list[j] < (bond_length_list[j]-self.bl_min) for j in range(len(distance_list))):
                                 adsorbed = False
                         break
                     else:
